@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { ProductEntity } from './product.entity';
+import { PaymentSessionEntity } from './payment-session.entity';
 import { Status } from '../transactions/status.enum';
 
 @Entity('Transaction')
@@ -19,22 +19,13 @@ export class TransactionEntity {
   amount: number;
 
   @Column()
-  productId: string;
+  sessionId: string;
 
-  @ManyToOne(() => ProductEntity)
+  @ManyToOne(() => PaymentSessionEntity)
   @JoinColumn({
-    name: 'productId',
+    name: 'sessionId',
   })
-  product: ProductEntity;
-
-  @Column()
-  quantity: number;
-
-  @Column()
-  userId: string;
-
-  @Column()
-  cardToken: string;
+  paymentSession: PaymentSessionEntity;
 
   @Column({
     type: 'enum',
@@ -45,6 +36,9 @@ export class TransactionEntity {
 
   @Column({ nullable: true })
   paymentTransactionId: string;
+
+  @Column({ nullable: true })
+  paymentMethod: string;
 
   @Column({ nullable: true })
   errorMessage: string;
