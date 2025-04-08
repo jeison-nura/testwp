@@ -18,16 +18,16 @@ import PaymentIcon from "@mui/icons-material/Payment";
 const GameCard = styled(Card)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
-  transition: "transform 0.3s, box-shadow 0.3s",
-  borderRadius: "12px",
+  transition: theme.transitions.create(["transform", "box-shadow"]),
+  borderRadius: theme.shape.borderRadius,
   overflow: "hidden",
-  backgroundColor: "#1a1a2e",
-  color: "#fff",
+  backgroundColor: theme.palette.background.paper,
+  color: theme.palette.text.primary,
   width: "100%",
   height: "500px", // Altura fija para todas las tarjetas
   "&:hover": {
     transform: "translateY(-8px)",
-    boxShadow: "0 12px 20px rgba(0, 0, 0, 0.4)",
+    boxShadow: theme.shadows[10],
   },
 }));
 
@@ -39,39 +39,39 @@ const CardContainer = styled(Box)(({ theme }) => ({
 }));
 
 const PriceTag = styled(Box)(({ theme }) => ({
-  backgroundColor: "#252a34",
-  color: "#fff",
-  padding: "8px 12px",
-  borderRadius: "8px",
+  backgroundColor: theme.palette.background.header,
+  color: theme.palette.text.primary,
+  padding: theme.spacing(1, 1.5),
+  borderRadius: theme.shape.borderRadius,
   fontWeight: "bold",
   display: "flex",
   alignItems: "center",
-  gap: "4px",
+  gap: theme.spacing(0.5),
 }));
 
 const BuyButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "#08d9d6",
-  color: "#252a34",
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
   fontWeight: "bold",
   "&:hover": {
-    backgroundColor: "#06b6b3",
+    backgroundColor: theme.palette.primary.dark,
   },
   "&.Mui-disabled": {
-    backgroundColor: "#252a34",
-    color: "#555",
+    backgroundColor: theme.palette.action.disabledBackground,
+    color: theme.palette.text.disabled,
   },
 }));
 
 const PayNowButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "#ff2e63",
-  color: "#fff",
+  backgroundColor: theme.palette.secondary.main,
+  color: theme.palette.secondary.contrastText,
   fontWeight: "bold",
   "&:hover": {
-    backgroundColor: "#e0264f",
+    backgroundColor: theme.palette.secondary.dark,
   },
   "&.Mui-disabled": {
-    backgroundColor: "#252a34",
-    color: "#555",
+    backgroundColor: theme.palette.action.disabledBackground,
+    color: theme.palette.text.disabled,
   },
 }));
 
@@ -100,7 +100,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           component="div"
           sx={{
             height: 200, // Altura fija para la imagen
-            backgroundColor: "#252a34",
+            backgroundColor: (theme) => theme.palette.background.header,
             backgroundSize: "cover",
             backgroundPosition: "center",
             position: "relative",
@@ -118,7 +118,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <SportsEsportsIcon sx={{ color: "#08d9d6", mr: 1 }} />
+            <SportsEsportsIcon
+              sx={{ color: (theme) => theme.palette.primary.main, mr: 1 }}
+            />
             <Typography
               gutterBottom
               variant="h6"
@@ -134,12 +136,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             value={randomRating}
             readOnly
             size="small"
-            sx={{ mb: 1, color: "#ff2e63" }}
+            sx={{ mb: 1, color: (theme) => theme.palette.secondary.main }}
           />
 
           <Typography
             variant="body2"
-            color="#eaeaea"
+            color="text.secondary"
             sx={{
               mb: 2,
               height: "3em",
@@ -171,13 +173,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <Chip
               label={`Stock: ${product.quantity}`}
               size="small"
-              sx={{
+              sx={(theme) => ({
                 bgcolor:
                   product.quantity > 0
-                    ? "rgba(8, 217, 214, 0.2)"
-                    : "rgba(255, 46, 99, 0.2)",
-                color: product.quantity > 0 ? "#08d9d6" : "#ff2e63",
-              }}
+                    ? `${theme.palette.primary.main}33`
+                    : `${theme.palette.secondary.main}33`,
+                color:
+                  product.quantity > 0
+                    ? theme.palette.primary.main
+                    : theme.palette.secondary.main,
+              })}
             />
           </Box>
         </CardContent>
