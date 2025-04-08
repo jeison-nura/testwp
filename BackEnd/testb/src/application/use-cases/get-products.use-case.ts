@@ -12,7 +12,6 @@ export class GetProductsUseCase {
       const products = await this.entityManager
         .createQueryBuilder(ProductEntity, 'product')
         .getMany();
-
       return Result.ok(products);
     } catch (error) {
       return Result.err(
