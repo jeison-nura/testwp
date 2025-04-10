@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ProductEntity } from 'src/domain/entities/product.entity';
 import { Result } from 'src/common/result';
 import { EntityManager } from 'typeorm';
-import { UpdateProductStockDto } from '../interfaces/product-update.dto';
+import { UpdateProductStockDto } from '../interfaces/product-update.interface';
 
 @Injectable()
 export class UpdateProductUseCase {

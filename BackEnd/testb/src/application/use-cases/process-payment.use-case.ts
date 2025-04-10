@@ -8,7 +8,7 @@ import { ProductEntity } from 'src/domain/entities/product.entity';
 import { PaymentSessionEntity } from 'src/domain/entities/payment-session.entity';
 import { Status } from 'src/domain/transactions/status.enum';
 import * as crypto from 'crypto';
-import { ProductDto } from '../interfaces/product.dto';
+import { ProductDto } from '../dtos/product.dto';
 import { UpdateProductUseCase } from './update-product.use-case';
 
 @Injectable()
@@ -70,6 +70,7 @@ export class ProcessPaymentUseCase {
           const transaction = new TransactionEntity();
           transaction.sessionId = savedSession.id;
           transaction.amount = amountInCents;
+          transaction.quantity = dto.quantity; // Add the quantity
           transaction.status = Status.PENDING;
 
           const savedTransaction =
@@ -81,10 +82,15 @@ export class ProcessPaymentUseCase {
             'INTEGRITY_SECRET',
             '',
           );
-          const signatureString = `${reference}${amountInCents}COP${integritySecret}`;
+          
+          // Use the expiration time from the session for consistency
+          const expirationDate = Math.floor(expiresAt.getTime() / 1000);
+          const concatenatedText = `${reference}${amountInCents}COP${expirationDate}${integritySecret}`;
+          
+          // Use node crypto since we're in a Node.js environment
           const signature = crypto
             .createHash('sha256')
-            .update(signatureString)
+            .update(concatenatedText)
             .digest('hex');
 
           // Generate JWT token for payment session
@@ -93,7 +99,7 @@ export class ProcessPaymentUseCase {
             productId: dto.id,
             userId: dto.userId,
             userEmail: dto.userEmail,
-            exp: Math.floor(expiresAt.getTime() / 1000),
+            expirationDate: expirationDate,
           };
 
           const paymentToken = this.jwtService.sign(payload, {
@@ -107,10 +113,7 @@ export class ProcessPaymentUseCase {
             amountInCents: amountInCents,
             reference: savedTransaction.id,
             signature: signature,
-            paymentToken: paymentToken,
-            redirectUrl:
-              this.configService.get<string>('FRONTEND_URL', '') +
-              '/payment-result',
+            paymentToken: paymentToken
           };
 
           // Return transaction with payment configuration

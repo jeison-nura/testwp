@@ -17,6 +17,9 @@ export class TransactionEntity {
 
   @Column()
   amount: number;
+  
+  @Column({ default: 1 })
+  quantity: number;
 
   @Column()
   sessionId: string;

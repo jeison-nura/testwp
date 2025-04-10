@@ -6,7 +6,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ProcessPaymentUseCase } from './../../application/use-cases/process-payment.use-case';
-import { ProductDto } from 'src/application/interfaces/product.dto';
+import { ProductDto } from 'src/application/dtos/product.dto';
 import { ValidationPipe } from '../pipes/product.pipe';
 @Controller('payments')
 export class PaymentController {

@@ -1,6 +1,6 @@
 export enum Status {
   PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
+  APPROVED = 'APPROVED',
+  CANCELED = 'CANCELED',
   REJECTED = 'REJECTED',
-  ERROR = 'ERROR',
 }
