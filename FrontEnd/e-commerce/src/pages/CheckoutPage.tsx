@@ -1,23 +1,5 @@
 import React from "react";
-import {
-  Typography,
-  Box,
-  Grid,
-  Paper,
-  TextField,
-  Button,
-  Stepper,
-  Step,
-  StepLabel,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Alert,
-} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useAppSelector, useAppDispatch } from "../hooks/redux";
-import { clearCart } from "../store/slices/cartSlice";
 import Layout from "../components/Layout/Layout";
 
 const steps = ["Información de envío", "Método de pago", "Confirmación"];
@@ -25,28 +7,34 @@ const steps = ["Información de envío", "Método de pago", "Confirmación"];
 const CheckoutPage: React.FC = () => {
   const [activeStep, setActiveStep] = React.useState(0);
   const [completed, setCompleted] = React.useState(false);
-  const { items } = useAppSelector((state) => state.cart);
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
-  // Verificar si el carrito está vacío
-  React.useEffect(() => {
-    if (items.length === 0 && !completed) {
-      navigate("/");
-    }
-  }, [items, navigate, completed]);
+  // Datos de ejemplo para la página de checkout
+  const sampleItems = [
+    { id: '1', name: 'Producto de ejemplo 1', price: 29.99, quantity: 2 },
+    { id: '2', name: 'Producto de ejemplo 2', price: 49.99, quantity: 1 },
+  ];
+
+  const [items, setItems] = React.useState(sampleItems);
 
   const calculateTotal = () => {
     return items.reduce(
-      (total, item) => total + item.product.price * item.quantity,
+      (total, item) => total + item.price * item.quantity,
       0
     );
+  };
+
+  const handleQuantityChange = (id: string, newQuantity: number) => {
+    if (newQuantity > 0) {
+      setItems(items.map(item => 
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      ));
+    }
   };
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
       setCompleted(true);
-      dispatch(clearCart());
     } else {
       setActiveStep((prevActiveStep) => prevActiveStep + 1);
     }
@@ -64,175 +52,171 @@ const CheckoutPage: React.FC = () => {
     switch (step) {
       case 0:
         return (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Información de envío
-            </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <TextField
+          <div className="mt-4">
+            <h6 className="text-lg font-medium mb-2">Información de envío</h6>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="col-span-1">
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                <input
                   required
                   id="firstName"
                   name="firstName"
-                  label="Nombre"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="given-name"
-                  variant="outlined"
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">Apellido *</label>
+                <input
                   required
                   id="lastName"
                   name="lastName"
-                  label="Apellido"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="family-name"
-                  variant="outlined"
                 />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
+              </div>
+              <div className="col-span-1 sm:col-span-2">
+                <label htmlFor="address1" className="block text-sm font-medium text-gray-700 mb-1">Dirección *</label>
+                <input
                   required
                   id="address1"
                   name="address1"
-                  label="Dirección"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="shipping address-line1"
-                  variant="outlined"
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">Ciudad *</label>
+                <input
                   required
                   id="city"
                   name="city"
-                  label="Ciudad"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="shipping address-level2"
-                  variant="outlined"
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="zip" className="block text-sm font-medium text-gray-700 mb-1">Código Postal *</label>
+                <input
                   required
                   id="zip"
                   name="zip"
-                  label="Código Postal"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="shipping postal-code"
-                  variant="outlined"
                 />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
+              </div>
+              <div className="col-span-1 sm:col-span-2">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Teléfono *</label>
+                <input
                   required
                   id="phone"
                   name="phone"
-                  label="Teléfono"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="tel"
-                  variant="outlined"
                 />
-              </Grid>
-            </Grid>
-          </Box>
+              </div>
+            </div>
+          </div>
         );
       case 1:
         return (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Método de pago
-            </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
+          <div className="mt-4">
+            <h6 className="text-lg font-medium mb-2">Método de pago</h6>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="col-span-1">
+                <label htmlFor="cardName" className="block text-sm font-medium text-gray-700 mb-1">Nombre en la tarjeta *</label>
+                <input
                   required
                   id="cardName"
-                  label="Nombre en la tarjeta"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="cc-name"
-                  variant="outlined"
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-1">Número de tarjeta *</label>
+                <input
                   required
                   id="cardNumber"
-                  label="Número de tarjeta"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="cc-number"
-                  variant="outlined"
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="expDate" className="block text-sm font-medium text-gray-700 mb-1">Fecha de expiración *</label>
+                <input
                   required
                   id="expDate"
-                  label="Fecha de expiración"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="cc-exp"
-                  variant="outlined"
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-1">CVV *</label>
+                <input
                   required
                   id="cvv"
-                  label="CVV"
-                  helperText="Últimos tres dígitos en la franja de firma"
-                  fullWidth
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent"
                   autoComplete="cc-csc"
-                  variant="outlined"
                 />
-              </Grid>
-            </Grid>
-          </Box>
+                <p className="text-xs text-gray-500 mt-1">Últimos tres dígitos en la franja de firma</p>
+              </div>
+            </div>
+          </div>
         );
       case 2:
         return (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Resumen del pedido
-            </Typography>
-            <List disablePadding>
+          <div className="mt-4">
+            <h6 className="text-lg font-medium mb-2">Resumen del pedido</h6>
+            <ul className="divide-y divide-gray-200">
               {items.map((item) => (
-                <ListItem key={item.product.id} sx={{ py: 1, px: 0 }}>
-                  <ListItemText
-                    primary={item.product.name}
-                    secondary={`Cantidad: ${item.quantity}`}
-                  />
-                  <Typography variant="body2">
-                    ${(item.product.price * item.quantity).toFixed(2)}
-                  </Typography>
-                </ListItem>
+                <li key={item.id} className="py-3 flex justify-between">
+                  <div>
+                    <p className="font-medium">{item.name}</p>
+                    <div className="flex items-center mt-1">
+                      <button 
+                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                        className={`w-6 h-6 flex items-center justify-center rounded-l ${item.quantity <= 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                      >
+                        -
+                      </button>
+                      <span className="w-8 h-6 flex items-center justify-center bg-white border-y border-gray-200 text-sm">
+                        {item.quantity}
+                      </span>
+                      <button 
+                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        className="w-6 h-6 flex items-center justify-center rounded-r bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      >
+                        +
+                      </button>
+                      <span className="ml-2 text-sm text-gray-500">x ${item.price.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium">
+                    ${(item.price * item.quantity).toFixed(2)}
+                  </p>
+                </li>
               ))}
-              <ListItem sx={{ py: 1, px: 0 }}>
-                <ListItemText primary="Total" />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              <li className="py-3 flex justify-between">
+                <p className="font-bold">Total</p>
+                <p className="font-bold">
                   ${calculateTotal().toFixed(2)}
-                </Typography>
-              </ListItem>
-            </List>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                  Envío
-                </Typography>
-                <Typography gutterBottom>John Doe</Typography>
-                <Typography gutterBottom>
-                  Calle Principal 123, Ciudad
-                </Typography>
-              </Grid>
-              <Grid item container direction="column" xs={12} sm={6}>
-                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                  Detalles de pago
-                </Typography>
-                <Typography gutterBottom>Tarjeta terminada en 1234</Typography>
-                <Typography gutterBottom>Expiración: 04/2024</Typography>
-              </Grid>
-            </Grid>
-          </Box>
+                </p>
+              </li>
+            </ul>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <div>
+                <h6 className="text-lg font-medium mt-2 mb-2">Envío</h6>
+                <p className="mb-1">John Doe</p>
+                <p className="mb-1">Calle Principal 123, Ciudad</p>
+              </div>
+              <div>
+                <h6 className="text-lg font-medium mt-2 mb-2">Detalles de pago</h6>
+                <p className="mb-1">Tarjeta terminada en 1234</p>
+                <p className="mb-1">Expiración: 04/2024</p>
+              </div>
+            </div>
+          </div>
         );
       default:
         return null;
@@ -241,53 +225,60 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <Layout>
-      <Paper sx={{ p: { xs: 2, md: 3 }, my: { xs: 3, md: 6 } }}>
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6 my-6">
         {completed ? (
-          <Box sx={{ textAlign: "center", py: 4 }}>
-            <Typography variant="h5" gutterBottom>
-              ¡Gracias por tu compra!
-            </Typography>
-            <Typography variant="subtitle1">
+          <div className="text-center py-8">
+            <h5 className="text-xl font-medium mb-2">¡Gracias por tu compra!</h5>
+            <p className="text-gray-600 mb-4">
               Tu número de pedido es #2001539. Hemos enviado un correo
               electrónico con la confirmación de tu pedido y te enviaremos una
               actualización cuando tu pedido haya sido enviado.
-            </Typography>
-            <Button
-              variant="contained"
+            </p>
+            <button
               onClick={handleGoToHome}
-              sx={{ mt: 3, ml: 1 }}
+              className="mt-3 ml-1 bg-[#08d9d6] hover:bg-[#06c2c0] text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-1 active:translate-y-0 active:shadow-md border-2 border-[#08d9d6]/30 ring-2 ring-[#08d9d6]/20 ring-offset-1"
             >
               Volver a la tienda
-            </Button>
-          </Box>
+            </button>
+          </div>
         ) : (
           <>
-            <Typography component="h1" variant="h4" align="center">
-              Checkout
-            </Typography>
-            <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
-              {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
+            <h1 className="text-2xl font-bold text-center">Checkout</h1>
+            <div className="pt-6 pb-8">
+              <div className="flex items-center justify-between mb-8">
+                {steps.map((label, index) => (
+                  <div key={label} className="flex flex-col items-center">
+                    <div className={`w-8 h-8 flex items-center justify-center rounded-full border-2 ${index <= activeStep ? 'border-[#08d9d6] bg-[#08d9d6] text-white' : 'border-gray-300 text-gray-500'} mb-2`}>
+                      {index + 1}
+                    </div>
+                    <div className={`text-sm ${index <= activeStep ? 'text-[#08d9d6] font-medium' : 'text-gray-500'}`}>{label}</div>
+                    {index < steps.length - 1 && (
+                      <div className={`hidden sm:block absolute left-0 w-full h-0.5 ${index < activeStep ? 'bg-[#08d9d6]' : 'bg-gray-200'}`} style={{ top: '25%', zIndex: -1 }}></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
             {renderStepContent(activeStep)}
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+            <div className="flex justify-end mt-6">
               {activeStep !== 0 && (
-                <Button onClick={handleBack} sx={{ mr: 1 }}>
+                <button 
+                  onClick={handleBack} 
+                  className="mr-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-1 active:translate-y-0 active:shadow-md ring-2 ring-gray-300/20 ring-offset-1"
+                >
                   Atrás
-                </Button>
+                </button>
               )}
-              <Button variant="contained" onClick={handleNext}>
-                {activeStep === steps.length - 1
-                  ? "Realizar pedido"
-                  : "Siguiente"}
-              </Button>
-            </Box>
+              <button 
+                onClick={handleNext}
+                className="bg-[#08d9d6] hover:bg-[#06c2c0] text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-1 active:translate-y-0 active:shadow-md border-2 border-[#08d9d6]/30 ring-2 ring-[#08d9d6]/20 ring-offset-1"
+              >
+                {activeStep === steps.length - 1 ? "Realizar pedido" : "Siguiente"}
+              </button>
+            </div>
           </>
         )}
-      </Paper>
+      </div>
     </Layout>
   );
 };

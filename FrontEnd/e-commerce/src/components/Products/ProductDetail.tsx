@@ -1,104 +1,31 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Typography,
-  Box,
-  Grid,
-  Paper,
-  Button,
-  Chip,
-  Divider,
-  CircularProgress,
-  Alert,
-  Snackbar,
-  Rating,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
-import { styled } from "@mui/material/styles";
-import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import ShoppingCartCheckoutIcon from "@mui/icons-material/ShoppingCartCheckout";
-import PaymentIcon from "@mui/icons-material/Payment";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import {
   fetchProductById,
   clearSelectedProduct,
 } from "../../store/slices/productSlice";
+import { PuzzlePieceIcon, CheckCircleIcon, CreditCardIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/solid';
+import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
+import PaymentModal from "../Payment/PaymentModal";
 
-const GameDetailPaper = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#1a1a2e",
-  color: "#fff",
-  borderRadius: "12px",
-  overflow: "hidden",
-}));
-
-const GameImage = styled(Box)(({ theme }) => ({
-  height: 400,
-  backgroundColor: "#252a34",
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  borderRadius: "8px",
-  position: "relative",
-}));
-
-const GameBanner = styled(Box)(({ theme }) => ({
-  position: "absolute",
-  top: "10px",
-  left: "0",
-  backgroundColor: "#ff2e63",
-  color: "#fff",
-  padding: "4px 12px",
-  borderTopRightRadius: "4px",
-  borderBottomRightRadius: "4px",
-  fontWeight: "bold",
-  fontSize: "0.75rem",
-  display: "flex",
-  alignItems: "center",
-  gap: "4px",
-  zIndex: 1,
-}));
-
-const PriceTag = styled(Box)(({ theme }) => ({
-  backgroundColor: "#252a34",
-  color: "#fff",
-  padding: "8px 12px",
-  borderRadius: "8px",
-  fontWeight: "bold",
-  display: "flex",
-  alignItems: "center",
-  gap: "4px",
-  width: "fit-content",
-}));
-
-const BuyButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "#08d9d6",
-  color: "#252a34",
-  fontWeight: "bold",
-  "&:hover": {
-    backgroundColor: "#06b6b3",
-  },
-  "&.Mui-disabled": {
-    backgroundColor: "#252a34",
-    color: "#555",
-  },
-}));
-
-const PayNowButton = styled(Button)(({ theme }) => ({
-  backgroundColor: "#ff2e63",
-  color: "#fff",
-  fontWeight: "bold",
-  "&:hover": {
-    backgroundColor: "#e0264f",
-  },
-  "&.Mui-disabled": {
-    backgroundColor: "#252a34",
-    color: "#555",
-  },
-}));
+// Componente de calificación personalizado con Tailwind
+const TailwindRating: React.FC<{ value: number, max?: number }> = ({ value, max = 5 }) => {
+  return (
+    <div className="flex items-center">
+      {[...Array(max)].map((_, index) => (
+        <span key={index}>
+          {index < value ? (
+            <StarIcon className="h-5 w-5 text-[#ff2e63]" />
+          ) : (
+            <StarOutlineIcon className="h-5 w-5 text-[#ff2e63]" />
+          )}
+        </span>
+      ))}
+    </div>
+  );
+};
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -107,8 +34,10 @@ const ProductDetail: React.FC = () => {
   const { selectedProduct, loading, error } = useAppSelector(
     (state) => state.products
   );
-  const [paymentSnackbarOpen, setPaymentSnackbarOpen] = React.useState(false);
-  const [randomRating] = React.useState(Math.floor(Math.random() * 5) + 1);
+  const [paymentSnackbarOpen, setPaymentSnackbarOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [randomRating] = useState(Math.floor(Math.random() * 5) + 1);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     if (id) {
@@ -125,46 +54,77 @@ const ProductDetail: React.FC = () => {
   };
 
   const handlePayNow = () => {
-    // Aquí se implementaría la integración con Wompi
-    // Por ahora solo mostramos un mensaje
+    // Abrir el modal de pago de Wompi
+    setPaymentModalOpen(true);
+  };
+  
+  const handleClosePaymentModal = () => {
+    setPaymentModalOpen(false);
+    // Mostrar mensaje de confirmación
     setPaymentSnackbarOpen(true);
+    
+    // Auto-cerrar el mensaje después de 3 segundos
+    setTimeout(() => {
+      setPaymentSnackbarOpen(false);
+    }, 3000);
   };
 
-  const handleClosePaymentSnackbar = () => {
-    setPaymentSnackbarOpen(false);
+  const handleIncreaseQuantity = () => {
+    if (selectedProduct && quantity < selectedProduct.quantity) {
+      setQuantity(quantity + 1);
+    }
+  };
+
+  const handleDecreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = parseInt(e.target.value);
+    if (!isNaN(newValue) && newValue >= 1 && selectedProduct && newValue <= selectedProduct.quantity) {
+      setQuantity(newValue);
+    }
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center my-16">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#08d9d6]"></div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ my: 4 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
+      <div className="my-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2">
           {error}
-        </Alert>
-        <Button variant="outlined" onClick={handleBack}>
+        </div>
+        <button 
+          onClick={handleBack}
+          className="border-2 border-[#08d9d6] text-[#08d9d6] hover:bg-[#08d9d6] hover:bg-opacity-10 px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-1 active:translate-y-0 active:shadow-md ring-2 ring-[#08d9d6]/20 ring-offset-1"
+        >
           Volver a la lista de productos
-        </Button>
-      </Box>
+        </button>
+      </div>
     );
   }
 
   if (!selectedProduct) {
     return (
-      <Box sx={{ my: 4 }}>
-        <Alert severity="info" sx={{ mb: 2 }}>
+      <div className="my-4">
+        <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-2">
           Producto no encontrado
-        </Alert>
-        <Button variant="outlined" onClick={handleBack}>
+        </div>
+        <button 
+          onClick={handleBack}
+          className="border-2 border-[#08d9d6] text-[#08d9d6] hover:bg-[#08d9d6] hover:bg-opacity-10 px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-1 active:translate-y-0 active:shadow-md ring-2 ring-[#08d9d6]/20 ring-offset-1"
+        >
           Volver a la lista de productos
-        </Button>
-      </Box>
+        </button>
+      </div>
     );
   }
 
@@ -185,137 +145,141 @@ const ProductDetail: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ my: 4 }}>
-      <Button
-        variant="outlined"
+    <div className="my-4">
+      <button
         onClick={handleBack}
-        sx={{
-          mb: 4,
-          color: "#08d9d6",
-          borderColor: "#08d9d6",
-          "&:hover": {
-            borderColor: "#06b6b3",
-            backgroundColor: "rgba(8, 217, 214, 0.1)",
-          },
-        }}
+        className="mb-4 flex items-center border-2 border-[#08d9d6] text-[#08d9d6] hover:bg-[#08d9d6] hover:bg-opacity-10 px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-1 active:translate-y-0 active:shadow-md ring-2 ring-[#08d9d6]/20 ring-offset-1"
       >
-        ← Volver a la tienda de juegos
-      </Button>
+        <ArrowLeftIcon className="h-4 w-4 mr-1" /> Volver a la tienda de juegos
+      </button>
 
-      <Snackbar
-        open={paymentSnackbarOpen}
-        autoHideDuration={3000}
-        onClose={handleClosePaymentSnackbar}
-        message="Redirigiendo a pasarela de pago Wompi..."
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      {paymentSnackbarOpen && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+          Procesando pago para {quantity} unidad(es)...
+        </div>
+      )}
+      
+      {/* Modal de pago de Wompi */}
+      <PaymentModal 
+        isOpen={paymentModalOpen}
+        onClose={handleClosePaymentModal}
+        amount={parseFloat(formattedPrice) * quantity}
+        quantity={quantity}
+        productName={selectedProduct?.name || ""}
+        productId={selectedProduct?.id || ""}
       />
 
-      <GameDetailPaper elevation={3} sx={{ p: 0, overflow: "hidden" }}>
-        <Grid container>
-          <Grid item xs={12} md={6} sx={{ position: "relative" }}>
-            <GameImage
-              sx={{
-                height: { xs: 300, md: 500 },
-                backgroundImage: `url(https://source.unsplash.com/random?videogame=${selectedProduct?.id})`,
-              }}
+      <div className="bg-[#1a1a2e] text-white rounded-xl overflow-hidden shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="relative">
+            <div 
+              className="h-[300px] md:h-[500px] bg-[#252a34] bg-cover bg-center rounded-lg relative"
+              style={{ backgroundImage: `url(https://source.unsplash.com/random?videogame=${selectedProduct?.id})` }}
             >
-              {/* Banner de descuento eliminado */}
-            </GameImage>
-          </Grid>
+            </div>
+          </div>
 
-          <Grid item xs={12} md={6}>
-            <Box sx={{ p: 4 }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <SportsEsportsIcon
-                  sx={{ color: "#08d9d6", mr: 1, fontSize: 28 }}
-                />
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  sx={{ fontWeight: "bold" }}
-                >
-                  {selectedProduct?.name}
-                </Typography>
-              </Box>
+          <div className="p-4">
+            <div className="flex items-center mb-2">
+              <PuzzlePieceIcon className="h-7 w-7 text-[#08d9d6] mr-2" />
+              <h1 className="text-2xl md:text-3xl font-bold">
+                {selectedProduct?.name}
+              </h1>
+            </div>
 
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Rating
-                  name="game-rating"
-                  value={randomRating}
-                  readOnly
-                  sx={{ color: "#ff2e63", mr: 2 }}
-                />
-                <Chip
-                  label={`Stock: ${selectedProduct?.quantity}`}
-                  sx={{
-                    bgcolor: selectedProduct?.quantity
-                      ? "rgba(8, 217, 214, 0.2)"
-                      : "rgba(255, 46, 99, 0.2)",
-                    color: selectedProduct?.quantity ? "#08d9d6" : "#ff2e63",
-                    fontWeight: "bold",
-                  }}
-                  size="small"
-                />
-              </Box>
+            <div className="flex items-center mb-3">
+              <TailwindRating value={randomRating} />
+              <span className={`ml-2 text-xs py-1 px-2 rounded-full ${selectedProduct?.quantity > 0 ? 'bg-[#08d9d6] bg-opacity-20 text-[#08d9d6]' : 'bg-[#ff2e63] bg-opacity-20 text-[#ff2e63]'} font-bold`}>
+                Stock: {selectedProduct?.quantity}
+              </span>
+            </div>
 
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <PriceTag>
-                  <PaymentIcon fontSize="small" />${formattedPrice}
-                </PriceTag>
-              </Box>
+            <div className="flex items-center mb-3">
+              <div className="bg-[#252a34] text-white px-3 py-2 rounded-lg font-bold flex items-center gap-1 w-fit">
+                <CreditCardIcon className="h-4 w-4" />${formattedPrice}
+              </div>
+            </div>
 
-              <Divider sx={{ my: 3, borderColor: "#252a34" }} />
+            <div className="my-3 border-t border-[#252a34]"></div>
 
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ color: "#08d9d6", fontWeight: "bold" }}
+            <h2 className="text-lg font-bold text-[#08d9d6] mb-2">
+              Cantidad
+            </h2>
+            
+            <div className="flex items-center mb-4">
+              <button 
+                onClick={handleDecreaseQuantity}
+                disabled={quantity <= 1}
+                className={`w-10 h-10 flex items-center justify-center rounded-l-lg ${quantity <= 1 ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-[#252a34] text-white hover:bg-[#323a47]'}`}
               >
-                Descripción del juego
-              </Typography>
-
-              <Typography variant="body1" paragraph sx={{ color: "#eaeaea" }}>
-                {selectedProduct?.description}
-              </Typography>
-
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ color: "#08d9d6", fontWeight: "bold", mt: 3 }}
+                -
+              </button>
+              <input
+                type="number"
+                min="1"
+                max={selectedProduct?.quantity || 1}
+                value={quantity}
+                onChange={handleQuantityChange}
+                onWheel={(e) => e.preventDefault()}
+                className="w-16 h-10 text-center bg-[#252a34] text-white border-x-0 border-y border-[#323a47] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <button 
+                onClick={handleIncreaseQuantity}
+                disabled={selectedProduct ? quantity >= selectedProduct.quantity : true}
+                className={`w-10 h-10 flex items-center justify-center rounded-r-lg ${selectedProduct && quantity < selectedProduct.quantity ? 'bg-[#252a34] text-white hover:bg-[#323a47]' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
               >
-                Características
-              </Typography>
+                +
+              </button>
+              <span className="ml-3 text-[#eaeaea]">
+                {selectedProduct && selectedProduct.quantity > 0 ? `Disponible: ${selectedProduct.quantity}` : 'Agotado'}
+              </span>
+            </div>
 
-              <List dense>
-                {gameFeatures.map((feature, index) => (
-                  <ListItem key={index} sx={{ p: 0, mb: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                      <CheckCircleIcon sx={{ color: "#ff2e63" }} />
-                    </ListItemIcon>
-                    <ListItemText primary={feature} sx={{ color: "#eaeaea" }} />
-                  </ListItem>
-                ))}
-              </List>
+            <div className="flex items-center mb-4">
+              <div className="bg-[#252a34] text-white px-3 py-2 rounded-lg font-bold flex items-center gap-1 w-fit">
+                <CreditCardIcon className="h-4 w-4" />Total: ${(parseFloat(formattedPrice) * quantity).toFixed(2)}
+              </div>
+            </div>
 
-              <Box
-                sx={{ mt: 4, display: "flex", flexDirection: "column", gap: 2 }}
+            <h2 className="text-lg font-bold text-[#08d9d6] mb-2">
+              Descripción del juego
+            </h2>
+
+            <p className="text-[#eaeaea] mb-4">
+              {selectedProduct?.description}
+            </p>
+
+            <h2 className="text-lg font-bold text-[#08d9d6] mt-3 mb-2">
+              Características
+            </h2>
+
+            <ul className="space-y-1">
+              {gameFeatures.map((feature, index) => (
+                <li key={index} className="flex items-start mb-1">
+                  <span className="mr-2 mt-1 min-w-[20px]">
+                    <CheckCircleIcon className="h-4 w-4 text-[#ff2e63]" />
+                  </span>
+                  <span className="text-[#eaeaea]">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-4 flex flex-col gap-2 mb-8">
+              <button
+                className={`w-full py-3 px-4 rounded-lg font-bold transform transition-all duration-200 border-2 shadow-md
+                ${selectedProduct?.quantity > 0 
+                  ? 'bg-[#ff2e63] text-white hover:bg-[#e0264f] hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] border-[#ff2e63]/30 ring-2 ring-[#ff2e63]/20 ring-offset-1 ring-offset-[#1a1a2e]' 
+                  : 'bg-[#252a34] text-gray-500 cursor-not-allowed border-gray-600/30'}`}
+                disabled={selectedProduct?.quantity <= 0}
+                onClick={handlePayNow}
               >
-                <PayNowButton
-                  variant="contained"
-                  size="large"
-                  fullWidth
-                  disabled={selectedProduct?.quantity <= 0}
-                  onClick={handlePayNow}
-                  startIcon={<ShoppingCartCheckoutIcon />}
-                >
-                  Comprar ahora con Wompi
-                </PayNowButton>
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
-      </GameDetailPaper>
-    </Box>
+                Comprar {quantity} {quantity > 1 ? 'unidades' : 'unidad'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

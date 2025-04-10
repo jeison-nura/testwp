@@ -1,43 +1,22 @@
 import React, { ReactNode } from "react";
-import { Box, Container, CssBaseline, ThemeProvider } from "@mui/material";
 import Header from "./Header";
 import Footer from "./Footer";
-import CartDrawer from "../Cart/CartDrawer";
-import { styled } from "@mui/material/styles";
-import theme from "../../theme";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
-// Utilizamos el tema centralizado importado desde ../../theme
-
-const MainContainer = styled(Container)(({ theme }) => ({
-  marginTop: theme.spacing(4),
-  marginBottom: theme.spacing(4),
-  flexGrow: 1,
-}));
-
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <ThemeProvider theme={theme}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "100vh",
-          backgroundColor: "#121225",
-        }}
-      >
-        <CssBaseline />
-        <Header />
-        <MainContainer component="main" maxWidth="lg">
+    <div className="flex flex-col min-h-screen bg-background-default">
+      <Header />
+      <main className="flex-grow">
+        <div className="container mx-auto max-w-7xl px-4 my-16">
           {children}
-        </MainContainer>
-        <Footer />
-        <CartDrawer />
-      </Box>
-    </ThemeProvider>
+        </div>
+      </main>
+      <Footer />
+    </div>
   );
 };
 

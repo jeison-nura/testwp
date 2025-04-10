@@ -1,78 +1,59 @@
 import React from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Container,
-  Button,
-  Box,
-} from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { styled } from "@mui/material/styles";
-import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
-import VideogameAssetIcon from "@mui/icons-material/VideogameAsset";
+import { PuzzlePieceIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
-const GameAppBar = styled(AppBar)(({ theme }) => ({
-  backgroundColor: "#252a34",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
-}));
+interface NavLinkProps {
+  to: string;
+  children: React.ReactNode;
+  startIcon?: React.ReactNode;
+}
 
-const LogoBox = styled(Box)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-}));
-
-const NavButton = styled(Button)(({ theme }) => ({
-  color: "#fff",
-  margin: theme.spacing(0, 1),
-  "&:hover": {
-    backgroundColor: "rgba(8, 217, 214, 0.1)",
-  },
-}));
+const NavLink: React.FC<NavLinkProps> = ({ to, children, startIcon }) => (
+  <RouterLink 
+    to={to} 
+    className="text-white mx-4 py-2 px-3 hover:bg-primary-main hover:bg-opacity-10 rounded transition-colors"
+  >
+    <div className="flex items-center">
+      {startIcon && <span className="mr-1">{startIcon}</span>}
+      {children}
+    </div>
+  </RouterLink>
+);
 
 const Header: React.FC = () => {
   return (
-    <GameAppBar position="static">
-      <Container maxWidth="lg">
-        <Toolbar disableGutters>
-          <LogoBox sx={{ mr: 2, display: { xs: "none", md: "flex" } }}>
-            <SportsEsportsIcon sx={{ fontSize: 28, color: "#08d9d6", mr: 1 }} />
-            <Typography
-              variant="h6"
-              noWrap
-              component={RouterLink}
+    <header className="bg-background-header shadow-md">
+      <div className="container mx-auto max-w-7xl">
+        <div className="flex items-center justify-between py-4 px-4">
+          <div className="flex items-center mr-8 hidden md:flex">
+            <PuzzlePieceIcon className="h-7 w-7 text-[#08d9d6] mr-1" />
+            <RouterLink
               to="/"
-              sx={{
-                fontWeight: 700,
-                color: "#fff",
-                textDecoration: "none",
-              }}
+              className="font-bold text-white no-underline text-xl"
             >
               GameStore
-            </Typography>
-          </LogoBox>
+            </RouterLink>
+          </div>
 
-          <Box sx={{ flexGrow: 1, display: "flex" }}>
-            <NavButton
-              component={RouterLink}
+          <div className="flex-grow flex">
+            <NavLink
               to="/"
-              startIcon={<VideogameAssetIcon />}
+              startIcon={<PuzzlePieceIcon className="h-5 w-5" />}
             >
               Juegos
-            </NavButton>
-            <NavButton
-              component={RouterLink}
+            </NavLink>
+            <NavLink
               to="/"
-              startIcon={<SportsEsportsIcon />}
+              startIcon={<SparklesIcon className="h-5 w-5" />}
             >
               Novedades
-            </NavButton>
-          </Box>
+            </NavLink>
+          </div>
 
-          <Box sx={{ flexGrow: 0 }}>{/* Carrito de compras eliminado */}</Box>
-        </Toolbar>
-      </Container>
-    </GameAppBar>
+          <div className="flex-shrink-0">{/* Carrito de compras eliminado */}</div>
+        </div>
+      </div>
+    </header>
   );
 };
 

@@ -1,68 +1,100 @@
+@import "tailwindcss";
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --color-primary: #08d9d6;
+  --color-primary-dark: #06a8a6;
+  --color-primary-light: #5ee7e5;
+  --color-secondary: #ff2e63;
+  --color-secondary-dark: #d42552;
+  --color-secondary-light: #ff6a8e;
+  --color-bg-default: #121225;
+  --color-bg-paper: #1a1a2e;
+  --color-bg-card: #1a1a2e;
+  --color-bg-header: #252a34;
+  --color-bg-footer: #252a34;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #eaeaea;
+  --color-text-disabled: #555555;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
+/* Aplicar tema oscuro globalmente */
 body {
+  background-color: var(--color-bg-default);
+  color: var(--color-text-primary);
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  padding: 0;
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Estilos para tarjetas y contenedores */
+.card, 
+.MuiCard-root,
+.MuiPaper-root,
+div[class*="paper"],
+div[class*="card"] {
+  background-color: var(--color-bg-paper) !important;
+  color: var(--color-text-primary) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+/* Estilos para inputs y campos de formulario */
+input, 
+select, 
+textarea,
+.MuiInput-root,
+.MuiOutlinedInput-root,
+.MuiFilledInput-root {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: var(--color-text-primary) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Estilos para botones */
+button:not([class*="primary"]):not([class*="secondary"]) {
+  background-color: var(--color-bg-paper) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Estilos para enlaces */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-primary-light);
+}
+
+/* Estilos para textos */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-primary);
+}
+
+p, span, div {
+  color: inherit;
+}
+
+/* Estilos para bordes y divisores */
+hr, .divider {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-default);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
 }

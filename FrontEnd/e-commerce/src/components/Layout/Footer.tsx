@@ -1,117 +1,77 @@
 import React from "react";
-import {
-  Box,
-  Container,
-  Typography,
-  Link,
-  Grid,
-  IconButton,
-} from "@mui/material";
-import { styled } from "@mui/material/styles";
-import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
-import FacebookIcon from "@mui/icons-material/Facebook";
-import TwitterIcon from "@mui/icons-material/Twitter";
-import InstagramIcon from "@mui/icons-material/Instagram";
-import YouTubeIcon from "@mui/icons-material/YouTube";
-import DiscordIcon from "@mui/icons-material/Chat";
-
-const GameFooter = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(4, 2),
-  marginTop: "auto",
-  backgroundColor: "#252a34",
-  color: "#fff",
-  borderTop: "1px solid #333",
-}));
-
-const SocialButton = styled(IconButton)(({ theme }) => ({
-  color: "#08d9d6",
-  margin: theme.spacing(0, 0.5),
-  "&:hover": {
-    backgroundColor: "rgba(8, 217, 214, 0.1)",
-    color: "#fff",
-  },
-}));
+import { PuzzlePieceIcon } from '@heroicons/react/24/outline';
+import { 
+  FaceSmileIcon, 
+  ChatBubbleLeftRightIcon, 
+  PhotoIcon, 
+  VideoCameraIcon 
+} from '@heroicons/react/24/outline';
 
 const Footer: React.FC = () => {
   return (
-    <GameFooter component="footer">
-      <Container maxWidth="lg">
-        <Grid
-          container
-          spacing={3}
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Grid
-            item
-            xs={12}
-            md={4}
-            sx={{ textAlign: { xs: "center", md: "left" } }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: { xs: "center", md: "flex-start" },
-              }}
-            >
-              <SportsEsportsIcon
-                sx={{ fontSize: 24, color: "#08d9d6", mr: 1 }}
-              />
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                GameStore
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="#eaeaea" sx={{ mt: 1 }}>
-              Tu destino para los mejores juegos digitales
-            </Typography>
-          </Grid>
+    <footer className="mt-auto py-8 px-4 bg-background-header text-white border-t border-gray-800">
+      <div className="container mx-auto max-w-7xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-between items-center">
+          <div className="text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start mb-4">
+              <PuzzlePieceIcon className="h-7 w-7 text-[#08d9d6] mr-2" />
+              <span className="font-bold text-xl">GameStore</span>
+            </div>
+            <p className="text-sm text-gray-300">
+              Tu tienda de videojuegos favorita con los mejores títulos y ofertas.
+            </p>
+          </div>
 
-          <Grid item xs={12} md={4} sx={{ textAlign: "center" }}>
-            <Box sx={{ mt: { xs: 2, md: 0 } }}>
-              <SocialButton aria-label="facebook">
-                <FacebookIcon />
-              </SocialButton>
-              <SocialButton aria-label="twitter">
-                <TwitterIcon />
-              </SocialButton>
-              <SocialButton aria-label="instagram">
-                <InstagramIcon />
-              </SocialButton>
-              <SocialButton aria-label="youtube">
-                <YouTubeIcon />
-              </SocialButton>
-              <SocialButton aria-label="discord">
-                <DiscordIcon />
-              </SocialButton>
-            </Box>
-          </Grid>
+          <div className="text-center">
+            <h3 className="font-bold text-lg mb-4">Enlaces rápidos</h3>
+            <ul className="space-y-2">
+              <li>
+                <a href="#" className="text-gray-300 hover:text-primary-main transition-colors">
+                  Juegos
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-300 hover:text-primary-main transition-colors">
+                  Novedades
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-300 hover:text-primary-main transition-colors">
+                  Ofertas
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-300 hover:text-primary-main transition-colors">
+                  Soporte
+                </a>
+              </li>
+            </ul>
+          </div>
 
-          <Grid
-            item
-            xs={12}
-            md={4}
-            sx={{ textAlign: { xs: "center", md: "right" } }}
-          >
-            <Typography variant="body2" color="#eaeaea">
-              {"© "}
-              {new Date().getFullYear()}{" "}
-              <Link
-                sx={{
-                  color: "#08d9d6",
-                  textDecoration: "none",
-                  "&:hover": { color: "#fff" },
-                }}
-                href="#"
-              >
-                GameStore
-              </Link>
-              {" | Todos los derechos reservados"}
-            </Typography>
-          </Grid>
-        </Grid>
-      </Container>
-    </GameFooter>
+          <div className="text-center md:text-right">
+            <h3 className="font-bold text-lg mb-4">Síguenos</h3>
+            <div className="flex justify-center md:justify-end space-x-2">
+              <button className="text-primary-main hover:text-white hover:bg-primary-main hover:bg-opacity-10 p-2 rounded-full transition-colors">
+                <FaceSmileIcon className="h-6 w-6" />
+              </button>
+              <button className="text-primary-main hover:text-white hover:bg-primary-main hover:bg-opacity-10 p-2 rounded-full transition-colors">
+                <PhotoIcon className="h-6 w-6" />
+              </button>
+              <button className="text-primary-main hover:text-white hover:bg-primary-main hover:bg-opacity-10 p-2 rounded-full transition-colors">
+                <VideoCameraIcon className="h-6 w-6" />
+              </button>
+              <button className="text-primary-main hover:text-white hover:bg-primary-main hover:bg-opacity-10 p-2 rounded-full transition-colors">
+                <ChatBubbleLeftRightIcon className="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-4 border-t border-gray-800 text-center text-sm text-gray-400">
+          <p>© {new Date().getFullYear()} GameStore. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </footer>
   );
 };
 

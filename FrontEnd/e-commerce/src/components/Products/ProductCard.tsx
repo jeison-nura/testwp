@@ -1,83 +1,30 @@
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Button,
-  Box,
-  Chip,
-  Rating,
-} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { Product } from "../../types/product.types";
-import { styled } from "@mui/material/styles";
-import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
-import PaymentIcon from "@mui/icons-material/Payment";
-
-const GameCard = styled(Card)(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  transition: theme.transitions.create(["transform", "box-shadow"]),
-  borderRadius: theme.shape.borderRadius,
-  overflow: "hidden",
-  backgroundColor: theme.palette.background.paper,
-  color: theme.palette.text.primary,
-  width: "100%",
-  height: "500px", // Altura fija para todas las tarjetas
-  "&:hover": {
-    transform: "translateY(-8px)",
-    boxShadow: theme.shadows[10],
-  },
-}));
-
-// Contenedor con dimensiones fijas para garantizar consistencia
-const CardContainer = styled(Box)(({ theme }) => ({
-  width: "100%",
-  height: "500px", // Altura fija para el contenedor
-  display: "flex",
-}));
-
-const PriceTag = styled(Box)(({ theme }) => ({
-  backgroundColor: theme.palette.background.header,
-  color: theme.palette.text.primary,
-  padding: theme.spacing(1, 1.5),
-  borderRadius: theme.shape.borderRadius,
-  fontWeight: "bold",
-  display: "flex",
-  alignItems: "center",
-  gap: theme.spacing(0.5),
-}));
-
-const BuyButton = styled(Button)(({ theme }) => ({
-  backgroundColor: theme.palette.primary.main,
-  color: theme.palette.primary.contrastText,
-  fontWeight: "bold",
-  "&:hover": {
-    backgroundColor: theme.palette.primary.dark,
-  },
-  "&.Mui-disabled": {
-    backgroundColor: theme.palette.action.disabledBackground,
-    color: theme.palette.text.disabled,
-  },
-}));
-
-const PayNowButton = styled(Button)(({ theme }) => ({
-  backgroundColor: theme.palette.secondary.main,
-  color: theme.palette.secondary.contrastText,
-  fontWeight: "bold",
-  "&:hover": {
-    backgroundColor: theme.palette.secondary.dark,
-  },
-  "&.Mui-disabled": {
-    backgroundColor: theme.palette.action.disabledBackground,
-    color: theme.palette.text.disabled,
-  },
-}));
+import { StarIcon } from '@heroicons/react/24/solid';
+import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
+import { PuzzlePieceIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 
 interface ProductCardProps {
   product: Product;
 }
+
+// Componente de calificación personalizado con Tailwind
+const TailwindRating: React.FC<{ value: number, max?: number }> = ({ value, max = 5 }) => {
+  return (
+    <div className="flex items-center mb-1">
+      {[...Array(max)].map((_, index) => (
+        <span key={index}>
+          {index < value ? (
+            <StarIcon className="h-4 w-4 text-secondary-main" />
+          ) : (
+            <StarOutlineIcon className="h-4 w-4 text-secondary-main" />
+          )}
+        </span>
+      ))}
+    </div>
+  );
+};
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const navigate = useNavigate();
@@ -94,119 +41,73 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       : parseFloat(String(product.price)).toFixed(2);
 
   return (
-    <CardContainer>
-      <GameCard>
-        <CardMedia
-          component="div"
-          sx={{
-            height: 200, // Altura fija para la imagen
-            backgroundColor: (theme) => theme.palette.background.header,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            position: "relative",
-            width: "100%",
-          }}
-          image={`https://source.unsplash.com/random?videogame=${product.id}`}
+    <div className="w-full h-[450px] flex">
+     <div className="w-full h-[450px] flex flex-col rounded-lg overflow-hidden bg-background-paper text-text-primary transition-all duration-300 hover:-translate-y-2 hover:shadow-lg border border-gray-700/30">
+        {/* Sección de imagen */}
+        <div 
+         className="h-[180px] bg-background-header bg-cover bg-center relative w-full"
+          style={{ backgroundImage: `url(https://source.unsplash.com/random?videogame=${product.id})` }}
         />
-        <CardContent
-          sx={{
-            flexGrow: 1,
-            p: 2,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <SportsEsportsIcon
-              sx={{ color: (theme) => theme.palette.primary.main, mr: 1 }}
-            />
-            <Typography
-              gutterBottom
-              variant="h6"
-              component="h2"
-              sx={{ fontWeight: "bold", m: 0 }}
-            >
+        
+        {/* Sección de título y calificación - con fondo ligeramente diferente */}
+        <div className="p-3 bg-background-paper border-b border-gray-700/50">
+          {/* Título del producto */}
+          <div className="flex items-center mb-1">
+            <PuzzlePieceIcon className="h-5 w-5 text-primary-main mr-1" />
+            <h2 className="font-bold text-lg m-0 h-[2.5em] overflow-hidden text-ellipsis line-clamp-2">
               {product.name}
-            </Typography>
-          </Box>
+            </h2>
+          </div>
 
-          <Rating
-            name="game-rating"
-            value={randomRating}
-            readOnly
-            size="small"
-            sx={{ mb: 1, color: (theme) => theme.palette.secondary.main }}
-          />
-
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mb: 2,
-              height: "3em",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              maxHeight: "3em",
-            }}
-          >
+          {/* Calificación */}
+          <div>
+            <TailwindRating value={randomRating} />
+          </div>
+        </div>
+        
+        {/* Sección de descripción - con fondo ligeramente más oscuro */}
+        <div className="p-3 bg-background-paper/90 border-b border-gray-700/50">
+          {/* Descripción */}
+          <p className="text-sm text-text-secondary h-[3em] min-h-[3em] overflow-hidden text-ellipsis line-clamp-2">
             {product.description}
-          </Typography>
+          </p>
+        </div>
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mt: "auto", // Empuja este elemento hacia abajo
-              mb: 2,
-            }}
-          >
-            <Box>
-              <PriceTag>
-                <PaymentIcon fontSize="small" />${formattedPrice}
-              </PriceTag>
-            </Box>
-            <Chip
-              label={`Stock: ${product.quantity}`}
-              size="small"
-              sx={(theme) => ({
-                bgcolor:
-                  product.quantity > 0
-                    ? `${theme.palette.primary.main}33`
-                    : `${theme.palette.secondary.main}33`,
-                color:
-                  product.quantity > 0
-                    ? theme.palette.primary.main
-                    : theme.palette.secondary.main,
-              })}
-            />
-          </Box>
-        </CardContent>
+        {/* Sección de precio y stock - con fondo ligeramente más claro */}
+        <div className="p-3 bg-background-header/30 border-b border-gray-700/50">
+          <div className="flex justify-between items-center">
+            <div className="bg-background-header text-text-primary py-1 px-3 rounded-lg font-bold flex items-center gap-0.5 shadow-sm">
+              <CreditCardIcon className="h-4 w-4" />${formattedPrice}
+            </div>
+            <div className={`text-xs py-1 px-2 rounded-full ${
+              product.quantity > 0
+                ? "bg-primary-main bg-opacity-20 text-primary-main"
+                : "bg-secondary-main bg-opacity-20 text-secondary-main"
+            } shadow-sm`}>
+              Stock: {product.quantity}
+            </div>
+          </div>
+        </div>
 
-        <Box
-          sx={{
-            p: 2,
-            display: "flex",
-            flexDirection: "column",
-            mt: "auto", // Asegura que el botón esté en la parte inferior
-          }}
-        >
-          <BuyButton
-            variant="contained"
-            fullWidth
+        {/* Sección de botón - con fondo diferente y efecto de elevación */}
+        <div className="p-4 flex flex-col mt-auto bg-background-paper/80 relative z-10 shadow-inner">
+          <button
             onClick={handleViewDetails}
             disabled={product.quantity <= 0}
-            startIcon={<SportsEsportsIcon />}
+            className={`w-full py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 
+              transform transition-all duration-200 
+              border-2 shadow-md 
+              ${
+                product.quantity > 0
+                 ? "bg-primary-main text-primary-contrastText hover:bg-primary-dark hover:shadow-xl hover:scale-105 border-primary-main/30 active:scale-95 ring-2 ring-primary-main/20 ring-offset-1 ring-offset-background-paper/80"
+                 : "bg-gray-700 text-text-disabled cursor-not-allowed border-gray-600/30"
+              }`}
           >
-            Ver juego
-          </BuyButton>
-        </Box>
-      </GameCard>
-    </CardContainer>
+            <PuzzlePieceIcon className="h-5 w-5" /> Ver juego
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

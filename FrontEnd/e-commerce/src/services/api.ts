@@ -1,5 +1,10 @@
 import axios from 'axios';
 import { Product } from '../types/product.types';
+import { 
+  CustomerData, 
+  PaymentRequest, 
+  TransactionResponse 
+} from '../types/payment.types';
 
 // Crear una instancia de axios con la URL base del backend
 const api = axios.create({
@@ -32,6 +37,66 @@ export const productService = {
       throw error;
     }
   },
+};
+
+// In the paymentService object
+
+// Servicios para pagos
+export const paymentService = {
+  // Crear una transacción de pago
+  createTransaction: async (paymentData: PaymentRequest): Promise<TransactionResponse> => {
+    try {
+      const response = await api.post<TransactionResponse>('/payments', paymentData);
+      
+      // Store the payment token when we receive the transaction
+      if (response.data.paymentConfig && response.data.paymentConfig.paymentToken) {
+        localStorage.setItem('paymentToken', response.data.paymentConfig.paymentToken);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error creating payment transaction:', error);
+      throw error;
+    }
+  },
+  
+  updateTransactionStatus: async (
+      transactionId: string, 
+      status: 'APPROVED' | 'CANCELED' | 'REJECTED',
+      additionalData?: any
+    ): Promise<any> => {
+      try {
+        const paymentToken = localStorage.getItem('paymentToken') || '';
+        
+        // Ensure transactionId is a string
+        const payload = {
+          status,
+          ...(additionalData || {})
+        };
+        
+        const response = await api.post(
+          `/transactions/${transactionId}/status`,
+          payload,
+          {
+            headers: {
+              'Authorization': `Bearer ${paymentToken}`
+            }
+          }
+        );
+        
+        localStorage.removeItem('paymentToken');
+        
+        return response.data;
+      } catch (error) {
+        console.error('Error updating transaction status:', error);
+        throw error;
+      }
+    },
+  
+  // Helper method to clear payment token when no longer needed
+  clearPaymentToken: () => {
+    localStorage.removeItem('paymentToken');
+  }
 };
 
 export default api;
