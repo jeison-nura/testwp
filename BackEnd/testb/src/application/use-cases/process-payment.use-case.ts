@@ -3,13 +3,19 @@ import { EntityManager } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Result } from 'src/common/result';
-import { TransactionEntity } from 'src/domain/entities/transaction.entity';
+import { ProductDto } from '../dtos/product.dto';
 import { ProductEntity } from 'src/domain/entities/product.entity';
 import { PaymentSessionEntity } from 'src/domain/entities/payment-session.entity';
+import { TransactionEntity } from 'src/domain/entities/transaction.entity';
 import { Status } from 'src/domain/transactions/status.enum';
-import * as crypto from 'crypto';
-import { ProductDto } from '../dtos/product.dto';
 import { UpdateProductUseCase } from './update-product.use-case';
+import { PaymentConfig } from '../interfaces/payment-config.interface';
+import * as crypto from 'crypto';
+
+export interface ProcessPaymentResponse {
+  transaction: TransactionEntity;
+  paymentConfig: PaymentConfig;
+}
 
 @Injectable()
 export class ProcessPaymentUseCase {
@@ -20,115 +26,104 @@ export class ProcessPaymentUseCase {
     private readonly updateProductStockUseCase: UpdateProductUseCase,
   ) {}
 
-  async execute(dto: ProductDto): Promise<Result<TransactionEntity, Error>> {
+  async execute(productDto: ProductDto): Promise<Result<ProcessPaymentResponse, Error>> {
     try {
-      return await this.entityManager.transaction(
-        async (transactionalEntityManager) => {
-          // Fetch product with pessimistic lock to prevent race conditions
-          const product = await transactionalEntityManager
-            .createQueryBuilder(ProductEntity, 'product')
-            .setLock('pessimistic_write')
-            .where('product.id = :id', { id: dto.id })
-            .getOne();
+      return await this.entityManager.transaction(async (entityManager) => {
+        // Get product with pessimistic lock
+        const product = await entityManager
+          .createQueryBuilder(ProductEntity, 'product')
+          .setLock('pessimistic_write')
+          .where('product.id = :id', { id: productDto.id })
+          .getOne();
 
-          if (!product) {
-            return Result.err(new Error('Product not found'));
-          }
+        if (!product) {
+          return Result.err(new Error('Product not found'));
+        }
 
-          // Update product stock using the dedicated use case
-          const stockUpdateResult =
-            await this.updateProductStockUseCase.execute({
-              productId: dto.id,
-              quantity: dto.quantity,
-              entityManager: transactionalEntityManager,
-            });
+        // Update product stock
+        const updateStockResult = await this.updateProductStockUseCase.execute({
+          productId: productDto.id,
+          quantity: productDto.quantity,
+          entityManager,
+        });
 
-          if (stockUpdateResult.isErr()) {
-            return Result.err(stockUpdateResult.getError());
-          }
+        if (updateStockResult.isErr()) {
+          return Result.err(updateStockResult.getError());
+        }
 
-          // Create payment session
-          const paymentSession = new PaymentSessionEntity();
-          paymentSession.productId = dto.id;
-          if (dto.userId) paymentSession.userId = dto.userId;
-          paymentSession.userEmail = dto.userEmail;
-          paymentSession.sessionToken = crypto.randomBytes(16).toString('hex');
+        // Calculate amount in cents
+        const amountInCents = Math.round(product.price * productDto.quantity * 100);
 
-          // Set session expiration (30 minutes)
-          const expiresAt = new Date();
-          expiresAt.setMinutes(expiresAt.getMinutes() + 30);
-          paymentSession.expiresAt = expiresAt;
+        // Create payment session
+        const sessionToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30 minutes expiration
 
-          const savedSession =
-            await transactionalEntityManager.save(paymentSession);
+        const paymentSession = new PaymentSessionEntity();
+        paymentSession.productId = productDto.id;
+        paymentSession.userId = productDto.userId ?? '';
+        paymentSession.userEmail = productDto.userEmail;
+        paymentSession.sessionToken = sessionToken;
+        paymentSession.expiresAt = expiresAt;
+        paymentSession.isUsed = false;
 
-          // Calculate amount in cents for payment processor
-          const amount = product.price * dto.quantity;
-          const amountInCents = Math.round(amount * 100);
+        const savedSession = await entityManager.save(paymentSession);
+        const expDate = new Date(Date.now() + 30 * 60 * 1000).toISOString()
+        // Create transaction
+        const transaction = new TransactionEntity();
+        transaction.sessionId = savedSession.id;
+        transaction.amount = amountInCents;
+        transaction.status = Status.PENDING;
+        transaction.quantity = productDto.quantity;
+        transaction.expDate = expDate;
 
-          // Create transaction record
-          const transaction = new TransactionEntity();
-          transaction.sessionId = savedSession.id;
-          transaction.amount = amountInCents;
-          transaction.quantity = dto.quantity; // Add the quantity
-          transaction.status = Status.PENDING;
+        const savedTransaction = await entityManager.save(transaction);
 
-          const savedTransaction =
-            await transactionalEntityManager.save(transaction);
+        // Use transaction ID as reference
+        const reference = savedTransaction.id;
+        // Generate integrity signature
+        const privateKey = this.configService.get('INTEGRITY_SECRET', '');
+        
+        const integrityConcatenation = `${reference}${amountInCents}COP${expDate}${privateKey}`;
+        const signature = crypto
+          .createHash('sha256')
+          .update(integrityConcatenation)
+          .digest('hex');
 
-          // Generate signature for payment gateway
-          const reference = savedTransaction.id;
-          const integritySecret = this.configService.get<string>(
-            'INTEGRITY_SECRET',
-            '',
-          );
-          
-          // Use the expiration time from the session for consistency
-          const expirationDate = Math.floor(expiresAt.getTime() / 1000);
-          const concatenatedText = `${reference}${amountInCents}COP${expirationDate}${integritySecret}`;
-          
-          // Use node crypto since we're in a Node.js environment
-          const signature = crypto
-            .createHash('sha256')
-            .update(concatenatedText)
-            .digest('hex');
-
-          // Generate JWT token for payment session
-          const payload = {
+        // Generate payment token
+        const paymentToken = this.jwtService.sign(
+          {
+            transactionId: savedTransaction.id,
+            amount: amountInCents,
+            productId: reference,
+            expirationDate: expDate,
             sessionId: savedSession.id,
-            productId: dto.id,
-            userId: dto.userId,
-            userEmail: dto.userEmail,
-            expirationDate: expirationDate,
-          };
+            userEmail: productDto.userEmail,
+          },
+          {
+            secret: this.configService.get('PAYMENT_TOKEN_SECRET'),
+            expiresIn: '30m',
+          },
+        );
 
-          const paymentToken = this.jwtService.sign(payload, {
-            secret: this.configService.get<string>('PAYMENT_TOKEN_SECRET', ''),
-          });
+        // Create payment config
+        const paymentConfig: PaymentConfig = {
+          publicKey: this.configService.get('PUBLIC_KEY', ''),
+          currency: 'COP',
+          amountInCents,
+          reference,
+          signature,
+          paymentToken,
+          redirectUrl: this.configService.get('REDIRECT_URL', ''),
+        };
 
-          // Prepare payment gateway configuration
-          const transactionConfig = {
-            publicKey: this.configService.get<string>('PUBLIC_KEY', ''),
-            currency: 'COP',
-            amountInCents: amountInCents,
-            reference: savedTransaction.id,
-            signature: signature,
-            paymentToken: paymentToken
-          };
-
-          // Return transaction with payment configuration
-          const result = {
-            ...savedTransaction,
-            paymentConfig: transactionConfig,
-          };
-
-          return Result.ok(result);
-        },
-      );
+        return Result.ok({
+          transaction: savedTransaction,
+          paymentConfig,
+        });
+      });
     } catch (error) {
-      return Result.err(
-        error instanceof Error ? error : new Error(String(error)),
-      );
+      return Result.err(error);
     }
   }
 }

@@ -26,7 +26,6 @@ export class UpdateTransactionStatusUseCase {
             new Error('Transaction status must be a final state (APPROVED, CANCELED, or REJECTED)'),
           );
         }
-
         // Find the transaction with a lock to prevent race conditions
         const transaction = await transactionalEntityManager
           .createQueryBuilder(TransactionEntity, 'transaction')

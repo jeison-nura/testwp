@@ -14,6 +14,6 @@ export class PaymentSessionDto {
   @IsEmail()
   userEmail: string;
 
-  @IsNumber()
-  expirationDate: number;
+  @IsString()
+  expirationDate: string;
 }

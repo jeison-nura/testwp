@@ -10,9 +10,14 @@ export class ExpiredTransactionsTask {
     private readonly checkExpiredTransactionsUseCase: CheckExpiredTransactionsUseCase,
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCron() {
-    this.logger.debug('Running expired transactions check');
-    await this.checkExpiredTransactionsUseCase.execute();
+    try {
+      this.logger.debug('Running expired transactions check');
+      await this.checkExpiredTransactionsUseCase.execute();
+    } catch (error) {
+      this.logger.error(`Error checking expired transactions: ${error.message}`, error.stack);
+      throw error; // Re-throw to let NestJS scheduler handle it
+    }
   }
 }

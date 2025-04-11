@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, CheckCircleIcon, ExclamationCircleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { paymentService } from '../../services/api';
-import { CustomerData, TransactionResponse } from '../../types/payment.types';
+import { PaymentResponse } from '../../types/payment.types';
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  amount: number;
+  amount: number; // Keeping this as it might be used elsewhere
   quantity: number;
   productName: string;
-  productId: string; // Añadir el ID del producto
+  productId: string;
 }
 
 declare global {
@@ -21,143 +21,90 @@ declare global {
 const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen,
   onClose,
-  amount,
   quantity,
-  productName,
   productId,
+  productName,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const widgetRef = useRef<any>(null);
-
-  // Estados para capturar datos del usuario
   const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [legalId, setLegalId] = useState('');
-  const [legalIdType, setLegalIdType] = useState('CC');
+  const [transaction, setTransaction] = useState<PaymentResponse | null>(null);
+  const [transactionStatus, setTransactionStatus] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED' | null>(null);
+  const [transactionDetails, setTransactionDetails] = useState<any>(null);
+  const [showForm, setShowForm] = useState(true);
 
-  // Estado para almacenar la transacción creada en el backend
-  const [transaction, setTransaction] = useState<TransactionResponse | null>(null);
-
-  // Función para crear una transacción en el backend y luego inicializar el widget de Wompi
-  const createTransactionAndInitWidget = async (customerData: CustomerData) => {
+  // Function to create a transaction in the backend
+  const createTransaction = async (userEmail: string) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // Crear la transacción en el backend
+      // Create the transaction in the backend with just email
       const paymentData = {
-        id: productId, // Usar el ID real del producto
+        id: productId,
         quantity: quantity,
-        userEmail: customerData.email,
+        userEmail: userEmail,
       };
       
       const transactionResponse = await paymentService.createTransaction(paymentData);
-      setTransaction(transactionResponse);
       
-      // Inicializar el widget con la información de la transacción
-      initializeWidget(customerData, transactionResponse);
+      if (!transactionResponse || !transactionResponse.paymentConfig) {
+        throw new Error('Invalid transaction response from server');
+      }
+      
+      setTransaction(transactionResponse);
+      setIsLoading(false);
+      setShowForm(false);
+      
     } catch (e) {
-      console.error('Error al crear la transacción:', e);
-      setError('Ocurrió un error al procesar el pago. Por favor, intente nuevamente.');
+      console.error('Error creating transaction:', e);
+      setError('An error occurred while processing the payment. Please try again.');
       setIsLoading(false);
     }
   };
 
-  // Función para cancelar la transacción
+  // Function to cancel the transaction
   const cancelTransaction = async (transactionId: string) => {
     try {
       await paymentService.updateTransactionStatus(transactionId, 'CANCELED');
-      console.log('Transacción cancelada exitosamente:', transactionId);
+      console.log('Transaction successfully canceled:', transactionId);
     } catch (error) {
-      console.error('Error al cancelar la transacción:', error);
+      console.error('Error canceling transaction:', error);
     }
   };
 
-  // Función para inicializar el widget de Wompi con los datos del cliente y la transacción
-  const initializeWidget = (customerData: CustomerData, transactionData: TransactionResponse) => {
-    if (!window.WidgetCheckout) {
-      setError('El widget de pago no está disponible. Por favor, recargue la página.');
-      setIsLoading(false);
-      // Cancelar la transacción si el widget no está disponible
-      if (transactionData && transactionData.id) {
-        cancelTransaction(transactionData.id);
-      }
-      return;
-    }
-    try {
-      // Destruir la instancia anterior del widget si existe
-      if (widgetRef.current && typeof widgetRef.current.destroy === 'function') {
-        widgetRef.current.destroy();
-      }
-      
-      // Configurar el widget con los datos de la transacción
-      const { paymentConfig } = transactionData;
-      
-      widgetRef.current = new window.WidgetCheckout({
-        currency: paymentConfig.currency,
-        amountInCents: paymentConfig.amountInCents,
-        reference: paymentConfig.reference,
-        publicKey: paymentConfig.publicKey,
-        signature: paymentConfig.signature, // Código de integridad generado en el backend
-        redirectUrl: paymentConfig.redirectUrl,
-        customerData: customerData
-      });
-      
-      setIsLoading(false);
-      console.log('Widget inicializado con:', { customerData, transactionData });
-      
-      // Abrir el widget después de inicializarlo
-      widgetRef.current.open((result: any) => {
-        console.log('Widget result:', result);
-        
-        // Check if the transaction exists in the result
-        if (result && result.transaction) {
-          const transaction = result.transaction;
-          console.log('Transaction ID: ', transaction.id);
-          console.log('Transaction object: ', transaction);
-          
-          // If the transaction was approved, we don't need to cancel it
-          if (transaction.status === 'APPROVED') {
-            console.log('Payment approved successfully!');
-          } else {
-            // If the transaction was not approved (user closed widget or payment failed)
-            console.log('Payment not completed. Status:', transaction.status);
-            cancelTransaction(transactionData.id);
-          }
-        } else {
-          // If there's no transaction in the result, the user likely closed the widget
-          console.log('Widget closed without completing transaction');
-          cancelTransaction(transactionData.id);
-        }
-      });
-    } catch (e) {
-      console.error('Error al inicializar el widget:', e);
-      setError('Ocurrió un error al inicializar el widget de pago. Por favor, intente nuevamente.');
-      setIsLoading(false);
-      // Cancelar la transacción si hay un error al inicializar el widget
-      if (transactionData && transactionData.id) {
-        cancelTransaction(transactionData.id);
-      }
-    }
-  };
-
-  // También necesitamos manejar el cierre del modal
+  // We also need to handle closing the modal
   const handleClose = () => {
-    // Si hay una transacción en curso y no ha sido completada, cancelarla
-    if (transaction && transaction.id) {
-      cancelTransaction(transaction.id);
+    // If there's an ongoing transaction that hasn't been completed, cancel it
+    if (transaction && transaction.transaction && transaction.transaction.id && !transactionStatus) {
+      cancelTransaction(transaction.transaction.id);
     }
+    
+    // Reset state for next time the modal is opened
+    setTransactionStatus(null);
+    setTransactionDetails(null);
+    setShowForm(true);
+    setError(null);
+    
     onClose();
   };
+  
+  // Function to reset the form and start a new payment
+  const handleNewPayment = () => {
+    setTransactionStatus(null);
+    setTransactionDetails(null);
+    setShowForm(true);
+    setError(null);
+  };
 
+  // Load the Wompi script when the modal opens
   useEffect(() => {
     if (!isOpen) return;
     setIsLoading(true);
     setError(null);
 
-    // Cargar el script del widget de Wompi si no está ya cargado
+    // Load the Wompi widget script if it's not already loaded
     if (!document.getElementById('wompi-script')) {
       const script = document.createElement('script');
       script.id = 'wompi-script';
@@ -165,7 +112,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       script.async = true;
       script.onload = () => setIsLoading(false);
       script.onerror = () => {
-        setError('No se pudo cargar el widget de pago. Por favor, intente nuevamente.');
+        setError('Could not load the payment widget. Please try again.');
         setIsLoading(false);
       };
       document.body.appendChild(script);
@@ -174,39 +121,200 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
 
     return () => {
-      // Limpiar la instancia del widget al desmontar el componente
+      // Clean up the widget instance when unmounting the component
       if (widgetRef.current && typeof widgetRef.current.destroy === 'function') {
         try {
           widgetRef.current.destroy();
         } catch (e) {
-          console.warn('Error al destruir el widget:', e);
+          console.warn('Error destroying widget:', e);
         }
       }
       widgetRef.current = null;
     };
   }, [isOpen]);
 
-  // Maneja el envío del formulario para capturar datos y crear la transacción
+  // Handle form submission
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Datos capturados:', { email, fullName, phoneNumber, legalId, legalIdType });
-    if (!email || !fullName || !phoneNumber || !legalId) {
-      setError('Por favor, complete todos los campos obligatorios.');
+    if (!email) {
+      setError('Please enter your email address.');
       return;
     }
     setError(null);
-    const customerData = {
-      email,
-      fullName,
-      phoneNumber,
-      phoneNumberPrefix: '+57',
-      legalId,
-      legalIdType,
+    createTransaction(email);
+  };
+
+  // Move the useEffect for the Wompi button to the component level
+  useEffect(() => {
+    // Only run this effect if we have a transaction and we're not showing the form
+    if (!transaction || !transaction.paymentConfig || showForm) return;
+    
+    const { publicKey, currency, amountInCents, reference, signature } = transaction.paymentConfig;
+    const {expDate} = transaction.transaction
+    
+    // Remove any existing Wompi button script
+    const existingScript = document.getElementById('wompi-button-script');
+    if (existingScript) {
+      existingScript.remove();
+    }
+    
+    // Create the script element for the Wompi button
+    const script = document.createElement('script');
+    script.id = 'wompi-button-script';
+    script.src = 'https://checkout.wompi.co/widget.js';
+    // Add crossorigin attribute to help with CSP issues
+    script.setAttribute('data-render', 'button');
+    script.setAttribute('data-public-key', publicKey);
+    script.setAttribute('data-currency', currency);
+    script.setAttribute('data-amount-in-cents', amountInCents.toString());
+    script.setAttribute('data-reference', reference);
+    script.setAttribute('data-signature:integrity', signature);
+    script.setAttribute('data-expiration-time', expDate)
+    // Add event listener for transaction status
+    const handleWompiSuccess = (event: any) => {
+      console.log('Payment success:', event.detail);
+      setTransactionStatus('APPROVED');
+      setTransactionDetails({
+        id: event.detail.transaction.id,
+        amount: (event.detail.transaction.amountInCents / 100).toFixed(2),
+        currency: event.detail.transaction.currency,
+        paymentMethod: event.detail.transaction.paymentMethodType,
+        reference: event.detail.transaction.reference,
+        date: new Date().toLocaleString()
+      });
+      
+      // Update transaction status in backend
+      if (transaction.transaction && transaction.transaction.id) {
+        paymentService.updateTransactionStatus(transaction.transaction.id, 'APPROVED', {
+          wompiTransactionId: event.detail.transaction.id
+        });
+      }
     };
-    createTransactionAndInitWidget(customerData);
+    
+    const handleWompiError = (event: any) => {
+      console.error('Payment error:', event.detail);
+      setTransactionStatus('REJECTED');
+      setTransactionDetails(event.detail);
+      
+      // Update transaction status in backend
+      if (transaction.transaction && transaction.transaction.id) {
+        paymentService.updateTransactionStatus(transaction.transaction.id, 'REJECTED');
+      }
+    };
+    
+    window.addEventListener('onWompiSuccess', handleWompiSuccess);
+    window.addEventListener('onWompiError', handleWompiError);
+    
+    // Append the script to the Wompi button container
+    const container = document.getElementById('wompi-button-container');
+    if (container) {
+      container.appendChild(script);
+    }
+    
+    return () => {
+      // Clean up event listeners
+      window.removeEventListener('onWompiSuccess', handleWompiSuccess);
+      window.removeEventListener('onWompiError', handleWompiError);
+    };
+  }, [transaction, showForm]);
+
+  // Function to render the Wompi button (without hooks inside)
+  const renderWompiButton = () => {
+    if (!transaction || !transaction.paymentConfig) return null;
+    
+    return (
+      <div id="wompi-button-container" className="mt-4">
+        {/* The Wompi button will be rendered here by the script */}
+        <p className="text-center mb-4">Haga clic en el botón para realizar el pago</p>
+      </div>
+    );
   };
 
   if (!isOpen) return null;
+
+  // Function to render transaction result UI based on status
+  const renderTransactionResult = () => {
+    if (!transactionStatus || !transactionDetails) return null;
+    
+    const statusConfig = {
+      'APPROVED': {
+        icon: <CheckCircleIcon className="h-12 w-12 text-green-500" />,
+        title: 'Pago Aprobado',
+        bgColor: 'bg-green-500 bg-opacity-10',
+        borderColor: 'border-green-500',
+        textColor: 'text-green-400'
+      },
+      'REJECTED': {
+        icon: <ExclamationCircleIcon className="h-12 w-12 text-red-500" />,
+        title: 'Pago Rechazado',
+        bgColor: 'bg-red-500 bg-opacity-10',
+        borderColor: 'border-red-500',
+        textColor: 'text-red-400'
+      },
+      'CANCELED': {
+        icon: <InformationCircleIcon className="h-12 w-12 text-yellow-500" />,
+        title: 'Pago Cancelado',
+        bgColor: 'bg-yellow-500 bg-opacity-10',
+        borderColor: 'border-yellow-500',
+        textColor: 'text-yellow-400'
+      },
+      'PENDING': {
+        icon: <InformationCircleIcon className="h-12 w-12 text-blue-500" />,
+        title: 'Pago Pendiente',
+        bgColor: 'bg-blue-500 bg-opacity-10',
+        borderColor: 'border-blue-500',
+        textColor: 'text-blue-400'
+      }
+    };
+    
+    const config = statusConfig[transactionStatus];
+    
+    return (
+      <div className={`p-6 ${config.bgColor} border ${config.borderColor} rounded-lg mb-4`}>
+        <div className="flex flex-col items-center mb-4">
+          {config.icon}
+          <h3 className={`text-xl font-bold mt-2 ${config.textColor}`}>{config.title}</h3>
+        </div>
+        
+        <div className="space-y-2 mb-4">
+          <p className="text-white"><span className="font-semibold">Producto:</span> {productName}</p>
+          <p className="text-white"><span className="font-semibold">Cantidad:</span> {quantity}</p>
+          <p className="text-white"><span className="font-semibold">Referencia:</span> {transactionDetails.reference}</p>
+          <p className="text-white"><span className="font-semibold">Monto:</span> ${transactionDetails.amount} {transactionDetails.currency}</p>
+          <p className="text-white"><span className="font-semibold">Fecha:</span> {transactionDetails.date}</p>
+          {transactionStatus === 'APPROVED' && (
+            <p className="text-white"><span className="font-semibold">Método de pago:</span> {transactionDetails.paymentMethod}</p>
+          )}
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          {transactionStatus === 'APPROVED' ? (
+            <button
+              onClick={handleClose}
+              className="w-full py-3 px-4 rounded-lg font-bold transform transition-all duration-200 bg-[#08d9d6] hover:bg-[#07c2c0] text-white border-2 border-[#08d9d6] hover:scale-[1.02] shadow-lg"
+            >
+              Continuar
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleNewPayment}
+                className="w-full py-3 px-4 rounded-lg font-bold transform transition-all duration-200 bg-[#ff2e63] hover:bg-[#e0264f] text-white border-2 border-[#08d9d6] hover:scale-[1.02] shadow-lg"
+              >
+                Intentar de nuevo
+              </button>
+              <button
+                onClick={handleClose}
+                className="w-full py-2 px-4 rounded-lg font-bold transform transition-all duration-200 bg-transparent hover:bg-[#252a34] text-white border border-[#252a34] hover:border-[#323a47]"
+              >
+                Cancelar
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -216,102 +324,83 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     >
       <div className="relative w-full max-w-md p-6 mx-auto bg-[#1a1a2e] rounded-xl shadow-xl text-white">
         <button
-          onClick={handleClose} // Cambiado de onClose a handleClose
+          onClick={handleClose}
           className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors"
-          aria-label="Cerrar modal"
+          aria-label="Close modal"
         >
           <XMarkIcon className="h-6 w-6" />
         </button>
-        <h2 className="text-xl font-bold mb-4 text-[#08d9d6]">Pago Seguro</h2>
-
-        {/* Formulario para capturar datos del cliente */}
-        <form onSubmit={handleFormSubmit} className="mb-4">
-          <div className="mb-2">
-            <label htmlFor="email" className="block text-sm">Email:</label>
-            <input
-              type="email"
-              id="email"
-              className="w-full p-2 rounded text-black"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label htmlFor="fullName" className="block text-sm">Nombre Completo:</label>
-            <input
-              type="text"
-              id="fullName"
-              className="w-full p-2 rounded text-black"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label htmlFor="phoneNumber" className="block text-sm">Número de Teléfono:</label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              className="w-full p-2 rounded text-black"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label htmlFor="legalIdType" className="block text-sm">Tipo de Documento:</label>
-            <select
-              id="legalIdType"
-              className="w-full p-2 rounded text-black"
-              value={legalIdType}
-              onChange={(e) => setLegalIdType(e.target.value)}
-              required
-            >
-              <option value="CC">Cédula de Ciudadanía</option>
-              <option value="CE">Cédula de Extranjería</option>
-              <option value="TI">Tarjeta de Identidad</option>
-              <option value="PP">Pasaporte</option>
-            </select>
-          </div>
-          <div className="mb-2">
-            <label htmlFor="legalId" className="block text-sm">Número de Documento:</label>
-            <input
-              type="text"
-              id="legalId"
-              className="w-full p-2 rounded text-black"
-              value={legalId}
-              onChange={(e) => setLegalId(e.target.value)}
-              required
-            />
-          </div>
-          
-          {error && (
-            <div className="mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 text-red-100 rounded-lg">
-              {error}
-            </div>
-          )}
-          
-          <div className="mt-4">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-3 px-4 rounded-lg font-bold transform transition-all duration-200 ${isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#ff2e63] hover:bg-[#e0264f]'} text-white`}
-            >
-              {isLoading ? 'Cargando...' : 'Proceder al Pago'}
-            </button>
-          </div>
-        </form>
         
-        <div className="mt-4 text-sm text-gray-400">
-          <p className="flex items-center justify-center mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-[#08d9d6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            Pago seguro con tarjeta de crédito
-          </p>
-          <p className="text-center text-xs">Todos los datos son procesados de forma segura</p>
-        </div>
+        {/* Conditional rendering based on transaction status */}
+        {transactionStatus ? (
+          <>
+            <h2 className="text-xl font-bold mb-4 text-[#08d9d6]">Resultado de la Transacción</h2>
+            {renderTransactionResult()}
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl font-bold mb-4 text-[#08d9d6]">Pago Seguro</h2>
+            
+            {/* Simplified form to capture only email */}
+            {showForm ? (
+              <form onSubmit={handleFormSubmit} className="mb-4">
+                <div className="mb-4">
+                  <label htmlFor="email" className="block text-sm mb-1">Email:</label>
+                  <input
+                    type="email"
+                    id="email"
+                    className="w-full p-2 rounded text-black"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="Ingrese su correo electrónico"
+                  />
+                </div>
+                
+                {error && (
+                  <div className="mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 text-red-100 rounded-lg">
+                    {error}
+                  </div>
+                )}
+                
+                <div className="mt-4">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full py-3 px-4 rounded-lg font-bold transform transition-all duration-200 ${
+                      isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#ff2e63] hover:bg-[#e0264f] hover:scale-[1.02] shadow-lg'
+                    } text-white border-2 border-[#08d9d6]`}
+                  >
+                    {isLoading ? 'Procesando...' : 'Continuar al Pago'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              // Show Wompi button after form submission
+              <>
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#08d9d6] mb-4"></div>
+                    <p className="text-[#08d9d6]">Preparando el pago...</p>
+                  </div>
+                ) : (
+                  // Render the Wompi button
+                  renderWompiButton()
+                )}
+              </>
+            )}
+            
+            <div className="mt-4 text-sm text-gray-400">
+              <p className="flex items-center justify-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-[#08d9d6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Pago seguro con tarjeta de crédito
+              </p>
+              <p className="text-center text-xs">Todos los datos son procesados de forma segura</p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

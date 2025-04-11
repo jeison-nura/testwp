@@ -28,9 +28,18 @@ export interface PaymentConfig {
 export interface TransactionResponse {
   id: string;
   amount: number;
+  expDate: string;
   sessionId: string;
   status: string;
-  paymentConfig: PaymentConfig;
+  quantity: number;
+  paymentTransactionId?: string;
+  paymentMethod?: string;
+  errorMessage?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PaymentResponse {
+ transaction: TransactionResponse;
+ paymentConfig: PaymentConfig; 
 }

@@ -29,7 +29,6 @@ export class PaymentTokenGuard implements CanActivate {
       // Validate payload against DTO
       const paymentSessionDto = plainToClass(PaymentSessionDto, payload);
       const errors = await validate(paymentSessionDto);
-      
       if (errors.length > 0) {
         throw new UnauthorizedException('Invalid payment token payload');
       }

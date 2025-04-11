@@ -1,10 +1,6 @@
 import axios from 'axios';
 import { Product } from '../types/product.types';
-import { 
-  CustomerData, 
-  PaymentRequest, 
-  TransactionResponse 
-} from '../types/payment.types';
+import { PaymentRequest, PaymentResponse} from '../types/payment.types';
 
 // Crear una instancia de axios con la URL base del backend
 const api = axios.create({
@@ -44,9 +40,9 @@ export const productService = {
 // Servicios para pagos
 export const paymentService = {
   // Crear una transacción de pago
-  createTransaction: async (paymentData: PaymentRequest): Promise<TransactionResponse> => {
+  createTransaction: async (paymentData: PaymentRequest): Promise<PaymentResponse> => {
     try {
-      const response = await api.post<TransactionResponse>('/payments', paymentData);
+      const response = await api.post<PaymentResponse>('/payments', paymentData);
       
       // Store the payment token when we receive the transaction
       if (response.data.paymentConfig && response.data.paymentConfig.paymentToken) {
@@ -67,7 +63,6 @@ export const paymentService = {
     ): Promise<any> => {
       try {
         const paymentToken = localStorage.getItem('paymentToken') || '';
-        
         // Ensure transactionId is a string
         const payload = {
           status,
