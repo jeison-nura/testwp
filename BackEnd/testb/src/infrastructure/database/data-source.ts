@@ -22,7 +22,7 @@ const options: DataSourceOptions & SeederOptions = {
   ssl: process.env.DB_USE_SSL
         ? {
             rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED === 'true',
-            ca: fs.readFileSync('/ruta/al/certificado.pem').toString(),
+            ca: fs.readFileSync(process.env.DB_SSL_CA_PATH || '').toString(),
           }
         : false,
   seeds: [InitialDataSeeder],

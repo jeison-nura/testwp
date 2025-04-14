@@ -23,7 +23,7 @@ import * as fs from 'fs';
         ssl: configService.get('DB_USE_SSL ', false)
         ? {
             rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED === 'true',
-            ca: fs.readFileSync('/ruta/al/certificado.pem').toString(),
+            ca: fs.readFileSync(configService.get('DB_SSL_CA_PATH', '')).toString()
           }
         : false,
       }),
