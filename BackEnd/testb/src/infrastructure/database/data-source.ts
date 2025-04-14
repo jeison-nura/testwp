@@ -5,6 +5,7 @@ import { ProductEntity } from '../../domain/entities/product.entity';
 import { TransactionEntity } from '../../domain/entities/transaction.entity';
 import { PaymentSessionEntity } from '../../domain/entities/payment-session.entity';
 import { InitialDataSeeder } from './seeds/initial-data.seed';
+import * as fs from 'fs';
 
 // Load environment variables
 config();
@@ -18,6 +19,12 @@ const options: DataSourceOptions & SeederOptions = {
   database: process.env.DB_DATABASE || 'testb',
   entities: [ProductEntity, TransactionEntity, PaymentSessionEntity],
   synchronize: process.env.DB_SYNCHRONIZE === 'true',
+  ssl: process.env.DB_USE_SSL
+        ? {
+            rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED === 'true',
+            ca: fs.readFileSync('/ruta/al/certificado.pem').toString(),
+          }
+        : false,
   seeds: [InitialDataSeeder],
 };
 
