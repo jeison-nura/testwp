@@ -1,8 +1,5 @@
 version: 1.0
 runtime: nodejs18
-
-network:
-  vpc-connector: vpc-0d15d0d7c9164f598
 build:
   commands:
     pre-build:
@@ -15,30 +12,49 @@ run:
   runtime-version: 18.x
   command: npm run start:prod
   network:
-    port: 8080
+    port: 3000
     env: PORT
   env:
     - name: NODE_ENV
-      value: DEVELOPMENT
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:NODE_ENV::"
     - name: PORT
-      value: 8080
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:PORT::"
     # Database configuration
     - name: DB_HOST
-      value: "${DB_HOST}"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_HOST::"
     - name: DB_PORT
-      value: "${DB_PORT}"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_PORT::"
     - name: DB_USERNAME
-      value: "${DB_USERNAME}"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_USERNAME::"
     - name: DB_PASSWORD
-      value: "${DB_PASSWORD}"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_PASSWORD::"
     - name: DB_DATABASE
-      value: "${DB_DATABASE}"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_DATABASE::"
     - name: DB_SYNCHRONIZE
-      value: "false"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_SYNCHRONIZE::"
     # SSL configuration for database
     - name: DB_USE_SSL
-      value: "${DB_USE_SSL}"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_USE_SSL::"
     - name: DB_REJECT_UNAUTHORIZED
-      value: "${DB_REJECT_UNAUTHORIZED}"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_REJECT_UNAUTHORIZED::"
     - name: DB_SSL_CA_PATH
-      value: "${DB_SSL_CA_PATH}"
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:DB_SSL_CA_PATH::"
+    # CORS configuration
+    - name: CORS_ORIGIN
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:CORS_ORIGIN::"
+    # JWT Configuration
+    - name: JWT_SECRET
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:JWT_SECRET::"
+    - name: JWT_EXPIRATION
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:JWT_EXPIRATION::"
+    - name: PAYMENT_TOKEN_SECRET
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:PAYMENT_TOKEN_SECRET::"
+    # Payment Gateway Configuration
+    - name: PUBLIC_KEY
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:PUBLIC_KEY::"
+    - name: PRIVATE_KEY
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:PRIVATE_KEY::"
+    - name: INTEGRITY_SECRET
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:INTEGRITY_SECRET::"
+    - name: PAYMENT_GATEWAY_API_URL
+      value-from: "arn:aws:secretsmanager:us-east-2:892899106354:secret:testapp:PAYMENT_GATEWAY_API_URL::"
