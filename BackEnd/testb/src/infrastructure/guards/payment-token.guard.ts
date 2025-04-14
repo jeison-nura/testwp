@@ -33,6 +33,12 @@ export class PaymentTokenGuard implements CanActivate {
         throw new UnauthorizedException('Invalid payment token payload');
       }
       
+      // Validate that transaction ID in token matches transaction ID in route params
+      const params = request.params;
+      if (params.transactionId && paymentSessionDto.transactionId !== params.transactionId) {
+        throw new UnauthorizedException('Transaction ID in token does not match transaction ID in route');
+      }
+      
       // Add validated payload to request object
       request['paymentSession'] = paymentSessionDto;
       return true;

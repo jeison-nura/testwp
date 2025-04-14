@@ -54,7 +54,7 @@ const ProductDetail: React.FC = () => {
   };
 
   const handlePayNow = () => {
-    // Abrir el modal de pago de Wompi
+    // Abrir el modal de pago
     setPaymentModalOpen(true);
   };
   
@@ -159,13 +159,11 @@ const ProductDetail: React.FC = () => {
         </div>
       )}
       
-      {/* Modal de pago de Wompi */}
+      {/* Modal de pago */}
       <PaymentModal 
         isOpen={paymentModalOpen}
         onClose={handleClosePaymentModal}
-        amount={parseFloat(formattedPrice) * quantity}
         quantity={quantity}
-        productName={selectedProduct?.name || ""}
         productId={selectedProduct?.id || ""}
       />
 

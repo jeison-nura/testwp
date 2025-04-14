@@ -16,4 +16,10 @@ export class PaymentSessionDto {
 
   @IsString()
   expirationDate: string;
+
+  @IsString()
+  transactionId: string;
+
+  @IsNumber()
+  amount: number;
 }

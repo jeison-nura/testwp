@@ -1,9 +1,7 @@
 export interface PaymentConfig {
-  publicKey: string;
-  currency: string;
-  amountInCents: number;
+  amount: number;
   reference: string;
-  signature: string;
+  expirationDate: string;
   paymentToken: string;
-  redirectUrl: string;
+  publicToken: string;
 }

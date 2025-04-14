@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -16,6 +17,15 @@ import { PaymentTokenGuard } from './infrastructure/guards/payment-token.guard';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { CheckExpiredTransactionsUseCase } from './application/use-cases/check-expired-transactions.use-case';
 import { ExpiredTransactionsTask } from './infrastructure/tasks/expired-transactions.task';
+import { PaymentTokenService } from './domain/services/payment-token.service';
+import { PaymentSignatureService } from './domain/services/payment-signature.service';
+import { AcceptanceTokensController } from './infrastructure/controllers/acceptance-tokens.controller';
+import { GetAcceptanceTokensUseCase } from './application/use-cases/get-acceptance-tokens.use-case';
+import { PaymentGatewayService } from './infrastructure/services/payment-gateway.service';
+import { CreatePaymentUseCase } from './application/use-cases/create-payment.use-case';
+import { PaymentSessionService } from './domain/services/payment-session.service';
+import { CheckTransactionStatusUseCase } from './application/use-cases/check-transaction-status.use-case';
+import { StatusShipmentTask } from './infrastructure/tasks/status-shipment.task';
 
 @Module({
   imports: [
@@ -46,8 +56,9 @@ import { ExpiredTransactionsTask } from './infrastructure/tasks/expired-transact
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
+    HttpModule,
   ],
-  controllers: [PaymentController, ProductController, TransactionController],
+  controllers: [PaymentController, ProductController, TransactionController, AcceptanceTokensController],
   providers: [
     ProcessPaymentUseCase,
     UpdateProductUseCase,
@@ -61,6 +72,14 @@ import { ExpiredTransactionsTask } from './infrastructure/tasks/expired-transact
     },
     CheckExpiredTransactionsUseCase,
     ExpiredTransactionsTask,
+    PaymentTokenService,
+    PaymentSignatureService,
+    GetAcceptanceTokensUseCase,
+    PaymentGatewayService, 
+    CreatePaymentUseCase,
+    PaymentSessionService,
+    CheckTransactionStatusUseCase,
+    StatusShipmentTask
   ],
 })
 export class AppModule {}

@@ -22,8 +22,10 @@ export class CheckExpiredTransactionsUseCase {
           .innerJoinAndSelect(
             TransactionEntity,
             'transaction',
-            'transaction.sessionId = session.id AND transaction.status = :status',
-            { status: Status.PENDING }
+            'transaction.sessionId = session.id AND transaction.status = :status AND session.isUsed = :isUsed',
+            { status: Status.PENDING,
+              isUsed: false,
+             }
           )
           .where('session.expiresAt < :now', { now })
           .getMany();
@@ -51,8 +53,6 @@ export class CheckExpiredTransactionsUseCase {
           transaction.updatedAt = new Date();
           transaction.errorMessage = 'Payment session expired';
 
-          // Mark the payment session as used
-          session.isUsed = true;
           await transactionalEntityManager.save(session);
           
           // Get the product with lock
