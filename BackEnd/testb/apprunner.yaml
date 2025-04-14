@@ -1,5 +1,5 @@
 version: 1.0
-runtime: nodejs22
+runtime: nodejs18
 
 network:
   vpc-connector: vpc-0d15d0d7c9164f598
@@ -12,7 +12,7 @@ build:
     post-build:
       - npm run seed
 run:
-  runtime-version: 22.x
+  runtime-version: 18.x
   command: npm run start:prod
   network:
     port: 8080
