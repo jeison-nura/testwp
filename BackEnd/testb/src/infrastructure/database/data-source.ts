@@ -19,12 +19,7 @@ const options: DataSourceOptions & SeederOptions = {
   database: process.env.DB_DATABASE || 'testb',
   entities: [ProductEntity, TransactionEntity, PaymentSessionEntity],
   synchronize: process.env.DB_SYNCHRONIZE === 'true',
-  ssl: process.env.DB_USE_SSL
-        ? {
-            rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED === 'true',
-            ca: fs.readFileSync(process.env.DB_SSL_CA_PATH || '').toString(),
-          }
-        : false,
+  ssl: { rejectUnauthorized: false },
   seeds: [InitialDataSeeder],
 };
 

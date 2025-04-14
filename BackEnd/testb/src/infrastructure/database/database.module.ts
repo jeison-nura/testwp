@@ -20,12 +20,7 @@ import * as fs from 'fs';
         database: configService.get('DB_DATABASE', 'testb'),
         entities: [ProductEntity, TransactionEntity, PaymentSessionEntity],
         synchronize: configService.get('DB_SYNCHRONIZE', true),
-        ssl: configService.get('DB_USE_SSL', false)
-        ? {
-            rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED === 'true',
-            ca: fs.readFileSync(configService.get('DB_SSL_CA_PATH', '')).toString()
-          }
-        : false,
+        ssl: { rejectUnauthorized: false }
       }),
     }),
     TypeOrmModule.forFeature([
