@@ -1,10 +1,14 @@
-import React from 'react';
-import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import CardIcon from './CardIcon';
-import { CardType } from './utils/cardUtils';
+import React from "react";
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
+import CardIcon from "./CardIcon";
+import { CardType } from "./utils/cardUtils";
 
 interface TransactionResultProps {
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED';
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
   details: {
     id: string;
     amount: string;
@@ -32,18 +36,20 @@ const TransactionResult: React.FC<TransactionResultProps> = ({
   email,
   onContinue,
   onRetry,
-  onCancel
+  onCancel,
 }) => {
   // Renderizar el icono según el estado de la transacción
   const renderStatusIcon = () => {
     switch (status) {
-      case 'APPROVED':
+      case "APPROVED":
         return <CheckCircleIcon className="h-16 w-16 text-green-500" />;
-      case 'REJECTED':
+      case "REJECTED":
         return <XCircleIcon className="h-16 w-16 text-red-500" />;
-      case 'PENDING':
-        return <ExclamationTriangleIcon className="h-16 w-16 text-yellow-500" />;
-      case 'CANCELED':
+      case "PENDING":
+        return (
+          <ExclamationTriangleIcon className="h-16 w-16 text-yellow-500" />
+        );
+      case "CANCELED":
         return <XCircleIcon className="h-16 w-16 text-gray-500" />;
       default:
         return null;
@@ -53,16 +59,16 @@ const TransactionResult: React.FC<TransactionResultProps> = ({
   // Renderizar el mensaje según el estado de la transacción
   const renderStatusMessage = () => {
     switch (status) {
-      case 'APPROVED':
-        return 'Pago aprobado';
-      case 'REJECTED':
-        return 'Pago rechazado';
-      case 'PENDING':
-        return 'Procesando pago';
-      case 'CANCELED':
-        return 'Pago cancelado';
+      case "APPROVED":
+        return "Pago aprobado";
+      case "REJECTED":
+        return "Pago rechazado";
+      case "PENDING":
+        return "Pago en proceso";
+      case "CANCELED":
+        return "Pago cancelado";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -77,10 +83,11 @@ const TransactionResult: React.FC<TransactionResultProps> = ({
         {renderStatusIcon()}
         <h3 className="mt-4 text-xl font-bold">{renderStatusMessage()}</h3>
         <p className="text-gray-400">
-          {status === 'APPROVED' && 'Tu pago ha sido procesado exitosamente'}
-          {status === 'REJECTED' && 'Tu pago no pudo ser procesado'}
-          {status === 'PENDING' && 'Estamos procesando tu pago'}
-          {status === 'CANCELED' && 'El proceso de pago ha sido cancelado'}
+          {status === "APPROVED" && "Tu pago ha sido procesado exitosamente"}
+          {status === "REJECTED" && "Tu pago no pudo ser procesado"}
+          {status === "PENDING" &&
+            "Tu pago está siendo procesado. Te notificaremos el resultado por correo electrónico."}
+          {status === "CANCELED" && "El proceso de pago ha sido cancelado"}
         </p>
       </div>
 
@@ -128,20 +135,20 @@ const TransactionResult: React.FC<TransactionResultProps> = ({
       </div>
 
       <div className="pt-4 flex flex-col space-y-3">
-        {status === 'APPROVED' && (
+        {status === "APPROVED" && (
           <button
             onClick={onContinue}
-            className="w-full bg-[#08d9d6] hover:bg-[#06b6b3] text-[#1a1a2e] font-bold py-2 px-4 rounded-md transition-colors"
+            className="w-full bg-[#08d9d6] hover:bg-[#06b6b3] text-[#1a1a2e] font-bold py-2 px-4 rounded-md transition-colors border border-[#08d9d6]"
           >
             Continuar
           </button>
         )}
 
-        {status === 'REJECTED' && (
+        {status === "REJECTED" && (
           <>
             <button
               onClick={onRetry}
-              className="w-full bg-[#08d9d6] hover:bg-[#06b6b3] text-[#1a1a2e] font-bold py-2 px-4 rounded-md transition-colors"
+              className="w-full bg-[#08d9d6] hover:bg-[#06b6b3] text-[#1a1a2e] font-bold py-2 px-4 rounded-md transition-colors border border-[#08d9d6]"
             >
               Intentar nuevamente
             </button>
@@ -154,16 +161,25 @@ const TransactionResult: React.FC<TransactionResultProps> = ({
           </>
         )}
 
-        {status === 'PENDING' && (
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#08d9d6]"></div>
-          </div>
+        {status === "PENDING" && (
+          <>
+            <p className="text-center text-gray-400 mb-4">
+              El estado de tu transacción será notificado por correo
+              electrónico.
+            </p>
+            <button
+              onClick={onContinue}
+              className="w-full bg-[#08d9d6] hover:bg-[#06b6b3] text-[#1a1a2e] font-bold py-2 px-4 rounded-md transition-colors border border-[#08d9d6]"
+            >
+              Volver a productos
+            </button>
+          </>
         )}
 
-        {status === 'CANCELED' && (
+        {status === "CANCELED" && (
           <button
             onClick={onRetry}
-            className="w-full bg-[#08d9d6] hover:bg-[#06b6b3] text-[#1a1a2e] font-bold py-2 px-4 rounded-md transition-colors"
+            className="w-full bg-[#08d9d6] hover:bg-[#06b6b3] text-[#1a1a2e] font-bold py-2 px-4 rounded-md transition-colors border border-[#08d9d6]"
           >
             Intentar nuevamente
           </button>
