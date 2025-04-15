@@ -173,6 +173,44 @@ El frontend está configurado para ser desplegado en Firebase Hosting:
 6. **Actualización de Estado**: El backend actualiza el estado de la transacción según la respuesta .
 7. **Resultado**: El frontend muestra el resultado del pago al usuario.
 
+## API de Pasarela de Pagos
+
+El proyecto incluye una colección de Postman para probar la API de la pasarela de pagos. Esta colección contiene todas las solicitudes configuradas para interactuar con los endpoints del sistema de pagos.
+
+### Colección Postman
+
+El archivo `Payment Gateway API.postman_collection.json` contiene las siguientes operaciones:
+
+- **Products**: Obtener todos los productos disponibles
+- **Payments**: Procesar pagos para productos
+- **Transactions**: Actualizar y consultar estados de transacciones
+- **Acceptance Tokens**: Obtener tokens de aceptación del comercio
+
+### Cómo usar la colección
+
+1. **Importar la colección en Postman**:
+
+   - Abre Postman
+   - Haz clic en "Import" y selecciona el archivo `Payment Gateway API.postman_collection.json`
+
+2. **Configurar variables de entorno**:
+
+   - La colección utiliza las siguientes variables:
+     - `baseUrl`: URL base de la API (por defecto: http://localhost:3000)
+     - `paymentToken`: Token JWT recibido al procesar un pago
+     - `transactionId`: ID de la transacción para consultas
+
+3. **Ejecutar las solicitudes**:
+   - Puedes probar cada endpoint individualmente
+   - Las solicitudes están organizadas por categorías para facilitar su uso
+
+### Ejemplos de uso
+
+- **Obtener productos**: GET {{baseUrl}}/products
+- **Procesar pago**: POST {{baseUrl}}/payments (con datos del producto y usuario)
+- **Verificar estado de transacción**: GET {{baseUrl}}/transactions/{{transactionId}}
+- **Actualizar estado de transacción**: PUT {{baseUrl}}/transactions/status
+
 ## Licencia
 
 Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
